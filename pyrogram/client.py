@@ -40,11 +40,11 @@ from pyrogram import enums
 from pyrogram import raw
 from pyrogram import utils
 from pyrogram.crypto import aes
-from pyrogram.errors import CDNFileHashMismatch, AuthBytesInvalid
+from pyrogram.errors import CDNFileHashMismatch
 from pyrogram.errors import (
     SessionPasswordNeeded,
     VolumeLocNotFound, ChannelPrivate,
-    BadRequest
+    BadRequest, AuthBytesInvalid
 )
 from pyrogram.handlers.handler import Handler
 from pyrogram.methods import Methods
@@ -88,8 +88,16 @@ class Client(Methods):
             Operating System version.
             Defaults to *platform.system() + " " + platform.release()*.
 
+        lang_pack (``str``, *optional*):
+            Name of the language pack used on the client.
+            Defaults to "" (empty string).
+
         lang_code (``str``, *optional*):
             Code of the language used on the client, in ISO 639-1 standard.
+            Defaults to "en".
+
+        system_lang_code (``str``, *optional*):
+            Code of the language used on the system, in ISO 639-1 standard.
             Defaults to "en".
 
         ipv6 (``bool``, *optional*):
@@ -188,7 +196,9 @@ class Client(Methods):
     DEVICE_MODEL = f"{platform.python_implementation()} {platform.python_version()}"
     SYSTEM_VERSION = f"{platform.system()} {platform.release()}"
 
+    LANG_PACK = ""
     LANG_CODE = "en"
+    SYSTEM_LANG_CODE = "en"
 
     PARENT_DIR = Path(sys.argv[0]).parent
 
@@ -213,7 +223,9 @@ class Client(Methods):
         app_version: str = APP_VERSION,
         device_model: str = DEVICE_MODEL,
         system_version: str = SYSTEM_VERSION,
+        lang_pack: str = LANG_PACK,
         lang_code: str = LANG_CODE,
+        system_lang_code: str = SYSTEM_LANG_CODE,
         ipv6: bool = False,
         proxy: dict = None,
         test_mode: bool = False,
@@ -242,7 +254,9 @@ class Client(Methods):
         self.app_version = app_version
         self.device_model = device_model
         self.system_version = system_version
+        self.lang_pack = lang_pack.lower()
         self.lang_code = lang_code.lower()
+        self.system_lang_code = system_lang_code.lower()
         self.ipv6 = ipv6
         self.proxy = proxy
         self.test_mode = test_mode
@@ -500,15 +514,15 @@ class Client(Methods):
                 is_min = True
                 continue
 
-            username = None
+            usernames = None
             phone_number = None
 
             if isinstance(peer, raw.types.User):
                 peer_id = peer.id
                 access_hash = peer.access_hash
-                username = (
-                    peer.username.lower() if peer.username
-                    else peer.usernames[0].username.lower() if peer.usernames
+                usernames = (
+                    [peer.username.lower()] if peer.username
+                    else [username.username.lower() for username in peer.usernames] if peer.usernames
                     else None
                 )
                 phone_number = peer.phone
@@ -520,9 +534,9 @@ class Client(Methods):
             elif isinstance(peer, raw.types.Channel):
                 peer_id = utils.get_channel_id(peer.id)
                 access_hash = peer.access_hash
-                username = (
-                    peer.username.lower() if peer.username
-                    else peer.usernames[0].username.lower() if peer.usernames
+                usernames = (
+                    [peer.username.lower()] if peer.username
+                    else [username.username.lower() for username in peer.usernames] if peer.usernames
                     else None
                 )
                 peer_type = "channel" if peer.broadcast else "supergroup"
@@ -533,7 +547,7 @@ class Client(Methods):
             else:
                 continue
 
-            parsed_peers.append((peer_id, access_hash, peer_type, username, phone_number))
+            parsed_peers.append((peer_id, access_hash, peer_type, usernames, phone_number))
 
         await self.storage.update_peers(parsed_peers)
 
@@ -802,6 +816,9 @@ class Client(Methods):
             if isinstance(e, asyncio.CancelledError):
                 raise e
 
+            if isinstance(e, pyrogram.errors.FloodWait):
+                raise e
+
             return None
         else:
             if in_memory:
@@ -1032,6 +1049,8 @@ class Client(Methods):
                     finally:
                         await cdn_session.stop()
             except pyrogram.StopTransmission:
+                raise
+            except pyrogram.errors.FloodWait:
                 raise
             except Exception as e:
                 log.exception(e)
