@@ -18,6 +18,7 @@ AUTOARCHIVE_NOT_AVAILABLE	This feature is not yet enabled for your account due t
 BANK_CARD_NUMBER_INVALID	The credit card number is invalid
 BANNED_RIGHTS_INVALID	You provided a set of restrictions that is invalid
 BASE_PORT_LOC_INVALID	The base port location is invalid
+BOOSTS_REQUIRED	Boosts required
 BOTS_TOO_MUCH	The chat has too many bots
 BOT_CHANNELS_NA	Bots can't edit admin privileges
 BOT_COMMAND_DESCRIPTION_INVALID	The command description was empty, too long or had invalid characters
@@ -49,6 +50,7 @@ CHANNELS_ADMIN_PUBLIC_TOO_MUCH	You are an administrator of too many public chann
 CHANNELS_TOO_MUCH	You have joined too many channels or supergroups, leave some and try again
 CHANNEL_ADD_INVALID	Internal error.
 CHANNEL_BANNED	The channel is banned
+CHANNEL_FORUM_MISSING	The channel forum is missing
 CHANNEL_INVALID	The channel parameter is invalid
 CHANNEL_PRIVATE	The channel/supergroup is not accessible
 CHANNEL_TOO_LARGE	The channel is too large
@@ -57,6 +59,7 @@ CHAT_ABOUT_TOO_LONG	The chat about text is too long
 CHAT_ADMIN_REQUIRED	The method requires chat admin privileges
 CHAT_DISCUSSION_UNALLOWED	The chat discussion is not allowed
 CHAT_FORWARDS_RESTRICTED	The chat restricts forwarding content
+CHAT_DISCUSSION_UNALLOWED	The chat discussion is not allowed
 CHAT_ID_EMPTY	The provided chat id is empty
 CHAT_ID_INVALID	The chat id being used is invalid or not known yet. Make sure you see the chat before interacting with it
 CHAT_INVALID	The chat is invalid
@@ -70,6 +73,7 @@ CHAT_TOO_BIG	The chat is too big for this action
 CODE_EMPTY	The provided code is empty
 CODE_HASH_INVALID	The provided code hash invalid
 CODE_INVALID	The provided code is invalid (i.e. from email)
+COLOR_INVALID	The provided color is invalid
 CONNECTION_API_ID_INVALID	The provided API id is invalid
 CONNECTION_APP_VERSION_EMPTY	App version is empty
 CONNECTION_DEVICE_MODEL_EMPTY	The device model is empty
@@ -134,8 +138,10 @@ FROM_MESSAGE_BOT_DISABLED	Bots can't use fromMessage min constructors
 FROM_PEER_INVALID	The from peer value is invalid
 GAME_BOT_INVALID	You cannot send that game with the current bot
 GEO_POINT_INVALID	Invalid geo point provided
+GIFT_SLUG_EXPIRED	The gift slug is expired
 GIF_CONTENT_TYPE_INVALID	GIF content-type invalid
 GIF_ID_INVALID	The provided gif/animation id is invalid
+GIFT_SLUG_EXPIRED	The gift slug is expired
 GRAPH_INVALID_RELOAD	Invalid graph token provided, please reload the stats and provide the updated token
 GRAPH_OUTDATED_RELOAD	The graph data is outdated
 GROUPCALL_SSRC_DUPLICATE_MUCH	Too many group call synchronization source duplicates
@@ -160,6 +166,8 @@ INVITE_HASH_EXPIRED	The chat invite link is no longer valid
 INVITE_HASH_INVALID	The invite link hash is invalid
 INVITE_REQUEST_SENT	The request to join this chat or channel has been successfully sent
 INVITE_REVOKED_MISSING	The action required a chat invite link to be revoked first
+INVITE_SLUG_EMPTY	The invite slug is empty
+INVITE_SLUG_EXPIRED	The invite slug is expired
 LANG_PACK_INVALID	The provided language pack is invalid
 LASTNAME_INVALID	The last name is invalid
 LIMIT_INVALID	The limit parameter is invalid
@@ -257,10 +265,12 @@ QUIZ_CORRECT_ANSWERS_EMPTY	The correct answers of the quiz are empty
 QUIZ_CORRECT_ANSWERS_TOO_MUCH	The quiz contains too many correct answers
 QUIZ_CORRECT_ANSWER_INVALID	The correct answers of the quiz are invalid
 QUIZ_MULTIPLE_INVALID	A quiz can't have multiple answers
+QUOTE_TEXT_INVALID	The quote text is invalid
 RANDOM_ID_EMPTY	The random ID is empty
 RANDOM_ID_INVALID	The provided random ID is invalid
 RANDOM_LENGTH_INVALID	The random length is invalid
 RANGES_INVALID	Invalid range provided
+REACTIONS_TOO_MANY	Non-premium users, can set up only one reaction per message
 REACTION_EMPTY	The reaction provided is empty
 REACTION_INVALID	Invalid reaction provided (only valid emoji are allowed)
 REFLECTOR_NOT_AVAILABLE	The call reflector is not available
@@ -310,6 +320,7 @@ STICKER_PNG_NOPNG	Stickers must be png files but the provided image was not a pn
 STICKER_TGS_NOTGS	A tgs sticker file was expected, but something else was provided
 STICKER_THUMB_PNG_NOPNG	A png sticker thumbnail file was expected, but something else was provided
 STICKER_VIDEO_NOWEBM	A webm video file was expected, but something else was provided
+STORIES_NEVER_CREATED	You have never created any stories
 STORIES_TOO_MUCH	Too many stories in the current account
 STORY_PERIOD_INVALID	The story period is invalid
 TAKEOUT_INVALID	The takeout id is invalid
@@ -322,10 +333,13 @@ THEME_MIME_INVALID	You cannot create this theme because the mime-type is invalid
 TMP_PASSWORD_DISABLED	The temporary password is disabled
 TMP_PASSWORD_INVALID	The temporary password is invalid
 TOKEN_INVALID	The provided token is invalid
+TOPIC_CLOSED	The topic was closed
+TOPIC_DELETED	The topic was deleted
 TOPIC_NOT_MODIFIED	The topic was not modified
 TRANSCRIPTION_FAILED	Telegram is having internal problems. Please try again later to transcribe the audio.
 TTL_DAYS_INVALID	The provided TTL days is invalid
 TTL_MEDIA_INVALID	The media does not support self-destruction
+TTL_PERIOD_INVALID	The provided TTL period is invalid
 TYPES_EMPTY	The types parameter is empty
 TYPE_CONSTRUCTOR_INVALID	The type constructor is invalid
 UNTIL_DATE_INVALID	That date parameter is invalid
@@ -355,6 +369,7 @@ USER_IS_BOT	A bot cannot send messages to other bots or to itself
 USER_KICKED	This user was kicked from this chat
 USER_NOT_MUTUAL_CONTACT	The user is not a mutual contact
 USER_NOT_PARTICIPANT	The user is not a member of this chat
+USER_PUBLIC_MISSING	The accounts username is missing
 VIDEO_CONTENT_TYPE_INVALID	The video content type is invalid (i.e.: not streamable)
 VIDEO_FILE_INVALID	The video file is invalid
 VOICE_MESSAGES_FORBIDDEN	Voice messages are restricted

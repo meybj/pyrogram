@@ -442,6 +442,10 @@ def pyrogram_api():
             MenuButtonWebApp
             MenuButtonDefault
             SentWebAppMessage
+            RequestChannelInfo
+            RequestChatInfo
+            RequestUserInfo
+            RequestPollInfo
         """,
         bot_commands="""
         Bot commands
