@@ -92,7 +92,11 @@ class PromoteChatMember:
                     pin_messages=privileges.can_pin_messages,
                     add_admins=privileges.can_promote_members,
                     manage_call=privileges.can_manage_video_chats,
-                    other=privileges.can_manage_chat
+                    other=privileges.can_manage_chat,
+                    manage_topics=privileges.can_manage_topics,
+                    post_stories=privileges.can_post_stories,
+                    edit_stories=privileges.can_edit_stories,
+                    delete_stories=privileges.can_delete_stories
                 ),
                 rank=rank or ""
             )
