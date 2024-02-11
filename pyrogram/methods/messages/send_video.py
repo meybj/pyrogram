@@ -40,6 +40,7 @@ class SendVideo:
         caption_entities: List["types.MessageEntity"] = None,
         has_spoiler: bool = None,
         ttl_seconds: int = None,
+        view_once: bool = None,
         duration: int = 0,
         width: int = 0,
         height: int = 0,
@@ -57,6 +58,7 @@ class SendVideo:
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
+        nosound_video: bool = None,
         progress: Callable = None,
         progress_args: tuple = ()
     ) -> Optional["types.Message"]:
@@ -94,6 +96,9 @@ class SendVideo:
                 Self-Destruct Timer.
                 If you set a timer, the video will self-destruct in *ttl_seconds*
                 seconds after it was viewed.
+
+            view_once (``bool``, *optional*):
+                Pass True if the photo should be viewable only once.
 
             duration (``int``, *optional*):
                 Duration of sent video in seconds.
@@ -149,6 +154,9 @@ class SendVideo:
                 You can pass anything you need to be available in the progress callback scope; for example, a Message
                 object or a Client instance in order to edit the message with the updated progress status.
 
+            nosound_video (``bool``, *optional*):
+                Pass True, if the uploaded video is a video message with no sound.
+
         Other Parameters:
             current (``int``):
                 The amount of bytes transmitted so far.
@@ -176,6 +184,9 @@ class SendVideo:
                 # Send self-destructing video
                 await app.send_video("me", "video.mp4", ttl_seconds=10)
 
+                # Send view-once video
+                await app.send_video("me", "video.mp4", view_once=True)
+
                 # Keep track of the progress while uploading
                 async def progress(current, total):
                     print(f"{current * 100 / total:.1f}%")
@@ -192,9 +203,10 @@ class SendVideo:
                     media = raw.types.InputMediaUploadedDocument(
                         mime_type=self.guess_mime_type(video) or "video/mp4",
                         file=file,
-                        ttl_seconds=ttl_seconds,
+                        ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds,
                         spoiler=has_spoiler,
                         thumb=thumb,
+                        nosound_video=nosound_video,
                         attributes=[
                             raw.types.DocumentAttributeVideo(
                                 supports_streaming=supports_streaming or None,
@@ -208,20 +220,21 @@ class SendVideo:
                 elif re.match("^https?://", video):
                     media = raw.types.InputMediaDocumentExternal(
                         url=video,
-                        ttl_seconds=ttl_seconds,
+                        ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds,
                         spoiler=has_spoiler
                     )
                 else:
-                    media = utils.get_input_media_from_file_id(video, FileType.VIDEO, ttl_seconds=ttl_seconds)
+                    media = utils.get_input_media_from_file_id(video, FileType.VIDEO, ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds)
             else:
                 thumb = await self.save_file(thumb)
                 file = await self.save_file(video, progress=progress, progress_args=progress_args)
                 media = raw.types.InputMediaUploadedDocument(
                     mime_type=self.guess_mime_type(file_name or video.name) or "video/mp4",
                     file=file,
-                    ttl_seconds=ttl_seconds,
+                    ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds,
                     spoiler=has_spoiler,
                     thumb=thumb,
+                    nosound_video=nosound_video,
                     attributes=[
                         raw.types.DocumentAttributeVideo(
                             supports_streaming=supports_streaming or None,

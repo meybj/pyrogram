@@ -41,6 +41,8 @@ class SendVideoNote:
         reply_to_message_id: int = None,
         message_thread_id: int = None,
         schedule_date: datetime = None,
+        ttl_seconds: int = None,
+        view_once: bool = None,
         protect_content: bool = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
@@ -96,6 +98,14 @@ class SendVideoNote:
             protect_content (``bool``, *optional*):
                 Protects the contents of the sent message from forwarding and saving.
 
+            ttl_seconds (``int``, *optional*):
+                Self-Destruct Timer.
+                If you set a timer, the video note will self-destruct in *ttl_seconds*
+                seconds after it was viewed.
+
+            view_once (``bool``, *optional*):
+                Pass True if the photo should be viewable only once.
+
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
                 instructions to remove reply keyboard or to force a reply from the user.
@@ -135,6 +145,12 @@ class SendVideoNote:
 
                 # Set video note length
                 await app.send_video_note("me", "video_note.mp4", length=25)
+
+                # Send self-destructing video note message
+                await app.send_video_note("me", "video_note.mp4", ttl_seconds=10)
+
+                # Send view-once video note message
+                await app.send_video_note("me", "video_note.mp4", view_once=True)
         """
         file = None
 
@@ -154,7 +170,8 @@ class SendVideoNote:
                                 w=length,
                                 h=length
                             )
-                        ]
+                        ],
+                        ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
                     )
                 else:
                     media = utils.get_input_media_from_file_id(video_note, FileType.VIDEO_NOTE)
@@ -172,7 +189,8 @@ class SendVideoNote:
                             w=length,
                             h=length
                         )
-                    ]
+                    ],
+                    ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
                 )
 
             reply_to = utils.get_reply_head_fm(message_thread_id, reply_to_message_id)

@@ -44,6 +44,8 @@ class SendVoice:
         message_thread_id: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
+        ttl_seconds: int = None,
+        view_once: bool = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -93,11 +95,23 @@ class SendVoice:
             message_thread_id (``int``, *optional*):
                 If the message is in a thread, ID of the original message.
 
+            partial_reply (``str``, *optional*):
+                Text to quote.
+                for reply_to_message only.
+
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
 
             protect_content (``bool``, *optional*):
                 Protects the contents of the sent message from forwarding and saving.
+
+            ttl_seconds (``int``, *optional*):
+                Self-Destruct Timer.
+                If you set a timer, the voice message will self-destruct in *ttl_seconds*
+                seconds after it was viewed.
+
+            view_once (``bool``, *optional*):
+                Pass True if the photo should be viewable only once.
 
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
@@ -140,22 +154,28 @@ class SendVoice:
 
                 # Set voice note duration
                 await app.send_voice("me", "voice.ogg", duration=20)
+
+                # Send self-destructing voice message
+                await app.send_voice("me", "voice.ogg", ttl_seconds=10)
+
         """
         file = None
 
         try:
             if isinstance(voice, str):
                 if os.path.isfile(voice):
+                    mime_type = utils.voiceAudioUrlFuxUps(self, voice, 2)
                     file = await self.save_file(voice, progress=progress, progress_args=progress_args)
                     media = raw.types.InputMediaUploadedDocument(
-                        mime_type=self.guess_mime_type(voice) or "audio/mpeg",
+                        mime_type=mime_type,
                         file=file,
                         attributes=[
                             raw.types.DocumentAttributeAudio(
                                 voice=True,
                                 duration=duration
                             )
-                        ]
+                        ],
+                        ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
                     )
                 elif re.match("^https?://", voice):
                     media = raw.types.InputMediaDocumentExternal(
@@ -164,16 +184,18 @@ class SendVoice:
                 else:
                     media = utils.get_input_media_from_file_id(voice, FileType.VOICE)
             else:
+                mime_type = utils.voiceAudioUrlFuxUps(self, voice.name, 2)
                 file = await self.save_file(voice, progress=progress, progress_args=progress_args)
                 media = raw.types.InputMediaUploadedDocument(
-                    mime_type=self.guess_mime_type(voice.name) or "audio/mpeg",
+                    mime_type=mime_type,
                     file=file,
                     attributes=[
                         raw.types.DocumentAttributeAudio(
                             voice=True,
                             duration=duration
                         )
-                    ]
+                    ],
+                    ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
                 )
 
             reply_to = utils.get_reply_head_fm(message_thread_id, reply_to_message_id)
