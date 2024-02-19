@@ -190,6 +190,10 @@ class Client(Methods):
             Set the maximum amount of concurrent transmissions (uploads & downloads).
             A value that is too high may result in network related issues.
             Defaults to 1.
+
+        init_connection_params (:obj:`~raw.base.JSONValue`, *optional*):
+            Additional initConnection parameters.
+            For now, only the tz_offset field is supported, for specifying timezone offset in seconds.
     """
 
     APP_VERSION = f"Pyrogram {__version__}"
@@ -244,7 +248,8 @@ class Client(Methods):
         takeout: bool = None,
         sleep_threshold: int = Session.SLEEP_THRESHOLD,
         hide_password: bool = False,
-        max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS
+        max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
+        init_connection_params: "raw.base.JSONValue" = None
     ):
         super().__init__()
 
@@ -275,6 +280,7 @@ class Client(Methods):
         self.sleep_threshold = sleep_threshold
         self.hide_password = hide_password
         self.max_concurrent_transmissions = max_concurrent_transmissions
+        self.init_connection_params = init_connection_params
 
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
 
