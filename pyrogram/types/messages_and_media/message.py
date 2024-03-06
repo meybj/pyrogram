@@ -886,6 +886,8 @@ class Message(Object, Update):
                                 pass
                         if reply_to_message and not reply_to_message.forum_topic_created:
                             parsed_message.reply_to_message = reply_to_message
+                    except ChannelPrivate:
+                        pass
                     except MessageIdsEmpty:
                         pass
 
@@ -1613,7 +1615,7 @@ class Message(Object, Update):
 
             reply_to_message_id (``int``, *optional*):
                 If the message is a reply, ID of the original message.
-            
+
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
 
