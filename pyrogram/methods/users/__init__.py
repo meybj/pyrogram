@@ -29,6 +29,7 @@ from .set_emoji_status import SetEmojiStatus
 from .set_profile_photo import SetProfilePhoto
 from .set_username import SetUsername
 from .unblock_user import UnblockUser
+from .update_birthday import UpdateBirthday
 from .update_profile import UpdateProfile
 
 
@@ -44,6 +45,7 @@ class Users(
     SetUsername,
     GetChatPhotosCount,
     UnblockUser,
+    UpdateBirthday,
     UpdateProfile,
     GetDefaultEmojiStatuses,
     SetEmojiStatus
