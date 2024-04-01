@@ -382,6 +382,7 @@ def pyrogram_api():
     categories = dict(
         users_chats="""
         Users & Chats
+            Birthday
             User
             Username
             Chat

@@ -138,12 +138,15 @@ class Chat(Object):
         available_reactions (:obj:`~pyrogram.types.ChatReactions`, *optional*):
             Available reactions in the chat.
             Returned only in :meth:`~pyrogram.Client.get_chat`.
-        
+
         usernames (List of :obj:`~pyrogram.types.Username`, *optional*):
             The list of chat's collectible (and basic) usernames if availables.
 
         full_name (``str``, *property*):
             Full name of the other party in a private chat, for private chats and bots.
+
+        birthday (:obj:`~pyrogram.types.Birthday`, *optional*):
+            Information about user birthday.
     """
 
     def __init__(
@@ -182,6 +185,7 @@ class Chat(Object):
         has_visible_history: bool = None,
         has_hidden_members: bool = None,
         is_forum: bool = None,
+        birthday: "types.Birthday" = None
     ):
         super().__init__(client)
 
@@ -217,6 +221,7 @@ class Chat(Object):
         self.has_visible_history = has_visible_history
         self.has_hidden_members = has_hidden_members
         self.is_forum = is_forum
+        self.birthday = birthday
 
     @property
     def full_name(self) -> str:
@@ -330,6 +335,7 @@ class Chat(Object):
 
             parsed_chat = Chat._parse_user_chat(client, users[full_user.id])
             parsed_chat.bio = full_user.about
+            parsed_chat.birthday = types.Birthday._parse(getattr(full_user, "birthday", None))
 
             if full_user.pinned_msg_id:
                 parsed_chat.pinned_message = await client.get_messages(
