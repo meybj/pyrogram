@@ -127,6 +127,14 @@ class Chat(Object):
             Distance in meters of this group chat from your location.
             Returned only in :meth:`~pyrogram.Client.get_nearby_chats`.
 
+        personal_channel (:obj:`~pyrogram.types.Chat`, *optional*):
+            The personal channel linked to this chat.
+            Returned only in :meth:`~pyrogram.Client.get_chat`.
+
+        personal_channel_message (:obj:`~pyrogram.types.Message`, *optional*):
+            The last message in the personal channel of this chat.
+            Returned only in :meth:`~pyrogram.Client.get_chat`.
+
         linked_chat (:obj:`~pyrogram.types.Chat`, *optional*):
             The linked discussion group (in case of channels) or the linked channel (in case of supergroups).
             Returned only in :meth:`~pyrogram.Client.get_chat`.
@@ -156,16 +164,21 @@ class Chat(Object):
         id: int,
         type: "enums.ChatType",
         is_verified: bool = None,
+        is_members_hidden: bool = None,
         is_restricted: bool = None,
         is_creator: bool = None,
+        is_admin: bool = None,
         is_scam: bool = None,
         is_fake: bool = None,
+        is_deactivated: bool = None,
         is_support: bool = None,
         title: str = None,
         username: str = None,
+            usernames: List["types.Username"] = None,
         first_name: str = None,
         last_name: str = None,
         photo: "types.ChatPhoto" = None,
+        wallpaper: "types.Document" = None,
         bio: str = None,
         description: str = None,
         dc_id: int = None,
@@ -178,10 +191,11 @@ class Chat(Object):
         restrictions: List["types.Restriction"] = None,
         permissions: "types.ChatPermissions" = None,
         distance: int = None,
+        personal_channel: "types.Chat" = None,
+        personal_channel_message: "types.Message" = None,
         linked_chat: "types.Chat" = None,
         send_as_chat: "types.Chat" = None,
         available_reactions: Optional["types.ChatReactions"] = None,
-        usernames: List["types.Username"] = None,
         has_visible_history: bool = None,
         has_hidden_members: bool = None,
         is_forum: bool = None,
@@ -192,16 +206,21 @@ class Chat(Object):
         self.id = id
         self.type = type
         self.is_verified = is_verified
+        self.is_members_hidden = is_members_hidden
         self.is_restricted = is_restricted
         self.is_creator = is_creator
+        self.is_admin = is_admin
         self.is_scam = is_scam
         self.is_fake = is_fake
+        self.is_deactivated = is_deactivated
         self.is_support = is_support
         self.title = title
         self.username = username
+        self.usernames = usernames
         self.first_name = first_name
         self.last_name = last_name
         self.photo = photo
+        self.wallpaper = wallpaper
         self.bio = bio
         self.description = description
         self.dc_id = dc_id
@@ -214,10 +233,11 @@ class Chat(Object):
         self.restrictions = restrictions
         self.permissions = permissions
         self.distance = distance
+        self.personal_channel = personal_channel
+        self.personal_channel_message = personal_channel_message
         self.linked_chat = linked_chat
         self.send_as_chat = send_as_chat
         self.available_reactions = available_reactions
-        self.usernames = usernames
         self.has_visible_history = has_visible_history
         self.has_hidden_members = has_hidden_members
         self.is_forum = is_forum
@@ -253,12 +273,16 @@ class Chat(Object):
     def _parse_chat_chat(client, chat: raw.types.Chat) -> "Chat":
         peer_id = -chat.id
         usernames = getattr(chat, "usernames", [])
+        admin_rights = getattr(chat, "admin_rights", None)
 
         return Chat(
             id=peer_id,
             type=enums.ChatType.GROUP,
             title=chat.title,
             is_creator=getattr(chat, "creator", None),
+            is_admin=True if admin_rights else None,
+            is_deactivated=getattr(chat, "deactivated", None),
+            usernames=types.List([types.Username._parse(r) for r in usernames]) or None,
             photo=types.ChatPhoto._parse(client, getattr(chat, "photo", None), peer_id, 0),
             permissions=types.ChatPermissions._parse(getattr(chat, "default_banned_rights", None)),
             members_count=getattr(chat, "participants_count", None),
@@ -273,6 +297,7 @@ class Chat(Object):
         peer_id = utils.get_channel_id(channel.id)
         restriction_reason = getattr(channel, "restriction_reason", [])
         usernames = getattr(channel, "usernames", [])
+        admin_rights = getattr(channel, "admin_rights", None)
 
         return Chat(
             id=peer_id,
@@ -280,10 +305,12 @@ class Chat(Object):
             is_verified=getattr(channel, "verified", None),
             is_restricted=getattr(channel, "restricted", None),
             is_creator=getattr(channel, "creator", None),
+            is_admin=True if admin_rights else None,
             is_scam=getattr(channel, "scam", None),
             is_fake=getattr(channel, "fake", None),
             title=channel.title,
             username=getattr(channel, "username", None),
+            usernames=types.List([types.Username._parse(r) for r in usernames]) or None,
             photo=types.ChatPhoto._parse(client, getattr(channel, "photo", None), peer_id,
                                          getattr(channel, "access_hash", 0)),
             restrictions=types.List([types.Restriction._parse(r) for r in restriction_reason]) or None,
@@ -291,7 +318,6 @@ class Chat(Object):
             members_count=getattr(channel, "participants_count", None),
             dc_id=getattr(getattr(channel, "photo", None), "dc_id", None),
             has_protected_content=getattr(channel, "noforwards", None),
-            usernames=types.List([types.Username._parse(r) for r in usernames]) or None,
             client=client,
             is_forum=getattr(channel, "forum"),
         )
@@ -331,7 +357,7 @@ class Chat(Object):
         chats = {c.id: c for c in chat_full.chats}
 
         if isinstance(chat_full, raw.types.users.UserFull):
-            full_user = chat_full.full_user
+            full_user: "raw.types.UserFull" = chat_full.full_user
 
             parsed_chat = Chat._parse_user_chat(client, users[full_user.id])
             parsed_chat.bio = full_user.about
@@ -342,6 +368,16 @@ class Chat(Object):
                     parsed_chat.id,
                     message_ids=full_user.pinned_msg_id
                 )
+
+            if full_user.personal_channel_id:
+                parsed_chat.personal_channel = Chat._parse_channel_chat(client, chats[full_user.personal_channel_id])
+                parsed_chat.personal_channel_message = await client.get_messages(
+                    parsed_chat.personal_channel.id,
+                    message_ids=full_user.personal_channel_message
+                )
+
+            if getattr(full_user, "wallpaper") and isinstance(full_user.wallpaper, raw.types.WallPaper):
+                parsed_chat.wallpaper = types.Document._parse(client, full_user.wallpaper.document, "wallpaper.jpg")
         else:
             full_chat = chat_full.full_chat
             chat_raw = chats[full_chat.id]
@@ -363,6 +399,7 @@ class Chat(Object):
                 # TODO: Add StickerSet type
                 parsed_chat.can_set_sticker_set = full_chat.can_set_stickers
                 parsed_chat.sticker_set_name = getattr(full_chat.stickerset, "short_name", None)
+                parsed_chat.is_members_hidden = full_chat.participants_hidden
 
                 linked_chat_raw = chats.get(full_chat.linked_chat_id, None)
 
@@ -378,6 +415,9 @@ class Chat(Object):
                         send_as_raw = chats[default_send_as.channel_id]
 
                     parsed_chat.send_as_chat = Chat._parse_chat(client, send_as_raw)
+
+                if full_chat.wallpaper and isinstance(full_chat.wallpaper, raw.types.WallPaper):
+                    parsed_chat.wallpaper = types.Document._parse(client, full_chat.wallpaper.document, "wallpaper.jpg")
 
             if full_chat.pinned_msg_id:
                 parsed_chat.pinned_message = await client.get_messages(
@@ -581,6 +621,31 @@ class Chat(Object):
             photo=photo,
             video=video,
             video_start_ts=video_start_ts
+        )
+
+    async def set_ttl(self, ttl_seconds: int) -> "types.Message":
+        """Bound method *set_ttl* of :obj:`~pyrogram.types.Chat`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            await client.set_chat_ttl(
+                chat_id=chat_id,
+                ttl_seconds=ttl_seconds
+            )
+
+        Example:
+            .. code-block:: python
+
+                await chat.set_ttl(86400)
+
+        Returns:
+            :obj:`~pyrogram.types.Message`: On success, the generated service message is returned.
+        """
+        return await self._client.set_chat_ttl(
+            chat_id=self.id,
+            ttl_seconds=ttl_seconds
         )
 
     async def ban_member(
@@ -1004,3 +1069,50 @@ class Chat(Object):
         """
 
         return await self._client.unpin_all_chat_messages(self.id)
+
+    async def mute(self, mute_until: datetime = None) -> bool:
+        """Bound method *mute* of :obj:`~pyrogram.types.Chat`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            client.update_chat_notifications(chat_id, mute=True, mute_until=mute_until)
+
+        Parameters:
+            mute (``bool``, *optional*):
+                Pass True if you want to mute chat.
+
+            until_date (:py:obj:`~datetime.datetime`, *optional*):
+                Date when the user will be unmuted. Defaults to forever.
+
+        Example:
+            .. code-block:: python
+
+                chat.mute()
+
+        Returns:
+            ``bool``: On success, True is returned.
+        """
+
+        return await self._client.update_chat_notifications(self.id, mute=True, mute_until=mute_until)
+
+    async def unmute(self) -> bool:
+        """Bound method *unmute* of :obj:`~pyrogram.types.Chat`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            client.update_chat_notifications(chat_id, mute=False)
+
+        Example:
+            .. code-block:: python
+
+                chat.unmute()
+
+        Returns:
+            ``bool``: On success, True is returned.
+        """
+
+        return await self._client.update_chat_notifications(self.id, mute=False)
