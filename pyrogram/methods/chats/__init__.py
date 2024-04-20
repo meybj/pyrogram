@@ -39,6 +39,7 @@ from .get_dialogs_count import GetDialogsCount
 from .get_group_call_stream_channels import GetGroupCallStreamChannels
 from .get_group_call_stream_rtmp_url import GetGroupCallStreamRtmpUrl
 from .get_nearby_chats import GetNearbyChats
+from .get_personal_channels import GetPersonalChannels
 from .get_send_as_chats import GetSendAsChats
 from .join_chat import JoinChat
 from .leave_chat import LeaveChat
@@ -92,6 +93,7 @@ class Chats(
     DeleteChannel,
     DeleteSupergroup,
     GetNearbyChats,
+    GetPersonalChannels,
     SetAdministratorTitle,
     SetSlowMode,
     DeleteUserHistory,
