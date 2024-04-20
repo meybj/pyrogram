@@ -36,8 +36,14 @@ class Chat(Object):
         type (:obj:`~pyrogram.enums.ChatType`):
             Type of chat.
 
+        is_forum (``bool``, *optional*):
+            True, if the supergroup chat is a forum.
+
         is_verified (``bool``, *optional*):
             True, if this chat has been verified by Telegram. Supergroups, channels and bots only.
+
+        is_members_hidden (``bool``, *optional*):
+            True, if the chat members are hidden.
 
         is_restricted (``bool``, *optional*):
             True, if this chat has been restricted. Supergroups, channels and bots only.
@@ -46,17 +52,29 @@ class Chat(Object):
         is_creator (``bool``, *optional*):
             True, if this chat owner is the current user. Supergroups, channels and groups only.
 
+        is_admin (``bool``, *optional*):
+            True, if the current user is admin. Supergroups, channels and groups only.
+
         is_scam (``bool``, *optional*):
             True, if this chat has been flagged for scam.
 
         is_fake (``bool``, *optional*):
             True, if this chat has been flagged for impersonation.
 
-        is_forum (``bool``, *optional*):
-            True, if the supergroup chat is a forum
+        is_deactivated (``bool``, *optional*):
+            True, if this chat has been flagged for deactivated.
 
-        is_support (``bool``):
+        is_support (``bool``, *optional*):
             True, if this chat is part of the Telegram support team. Users and bots only.
+
+        is_stories_hidden (``bool``, *optional*):
+            True, if this chat has hidden stories.
+
+        is_stories_unavailable (``bool``, *optional*):
+            True, if this chat stories is unavailable.
+
+        is_business_bot (``bool``, *optional*):
+            True, if this bot can connect to business account.
 
         title (``str``, *optional*):
             Title, for supergroups, channels and basic group chats.
@@ -64,14 +82,26 @@ class Chat(Object):
         username (``str``, *optional*):
             Username, for private chats, bots, supergroups and channels if available.
 
+        usernames (List of :obj:`~pyrogram.types.Username`, *optional*):
+            The list of chat's collectible (and basic) usernames if available.
+
         first_name (``str``, *optional*):
             First name of the other party in a private chat, for private chats and bots.
 
         last_name (``str``, *optional*):
             Last name of the other party in a private chat, for private chats.
 
+        full_name (``str``, *property*):
+            Full name of the other party in a private chat, for private chats and bots.
+
         photo (:obj:`~pyrogram.types.ChatPhoto`, *optional*):
             Chat photo. Suitable for downloads only.
+
+        stories (List of :obj:`~pyrogram.types.Story`, *optional*):
+            The list of chat's stories if available.
+
+        wallpaper (:obj:`~pyrogram.types.Document`, *optional*):
+            Chat wallpaper.
 
         bio (``str``, *optional*):
             Bio of the other party in a private chat.
@@ -86,6 +116,9 @@ class Chat(Object):
             Note that this information is approximate; it is based on where Telegram stores the current chat photo.
             It is accurate only in case the owner has set the chat photo, otherwise the dc_id will be the one assigned
             to the administrator who set the current chat photo.
+
+        folder_id (``int``, *optional*):
+            The folder identifier where the chat is located.
 
         has_protected_content (``bool``, *optional*):
             True, if messages from the chat can't be forwarded to other chats.
@@ -147,14 +180,26 @@ class Chat(Object):
             Available reactions in the chat.
             Returned only in :meth:`~pyrogram.Client.get_chat`.
 
-        usernames (List of :obj:`~pyrogram.types.Username`, *optional*):
-            The list of chat's collectible (and basic) usernames if availables.
+        level (``int``, *optional*):
+            Channel boosts level.
 
-        full_name (``str``, *property*):
-            Full name of the other party in a private chat, for private chats and bots.
+        reply_color (:obj:`~pyrogram.types.ChatColor`, *optional*):
+            Chat reply color.
+
+        profile_color (:obj:`~pyrogram.types.ChatColor`, *optional*):
+            Chat profile color.
+
+        business_info (:obj:`~pyrogram.types.BusinessInfo`, *optional*):
+            Business information of a chat.
+
+        business_intro (:obj:`~pyrogram.types.BusinessIntro`, *optional*):
+            For private chats with business accounts, the intro of the business.
 
         birthday (:obj:`~pyrogram.types.Birthday`, *optional*):
             Information about user birthday.
+
+        raw (:obj:`~pyrogram.raw.base.Chat` | :obj:`~pyrogram.raw.base.User` | :obj:`~pyrogram.raw.base.ChatFull` | :obj:`~pyrogram.raw.base.UserFull`, *optional*):
+            The raw chat or user object, as received from the Telegram API.
     """
 
     def __init__(
@@ -163,6 +208,7 @@ class Chat(Object):
         client: "pyrogram.Client" = None,
         id: int,
         type: "enums.ChatType",
+        is_forum: bool = None,
         is_verified: bool = None,
         is_members_hidden: bool = None,
         is_restricted: bool = None,
@@ -172,16 +218,21 @@ class Chat(Object):
         is_fake: bool = None,
         is_deactivated: bool = None,
         is_support: bool = None,
+        is_stories_hidden: bool = None,
+        is_stories_unavailable: bool = None,
+        is_business_bot: bool = None,
         title: str = None,
         username: str = None,
-            usernames: List["types.Username"] = None,
+        usernames: List["types.Username"] = None,
         first_name: str = None,
         last_name: str = None,
         photo: "types.ChatPhoto" = None,
+        stories: List["types.Story"] = None,
         wallpaper: "types.Document" = None,
         bio: str = None,
         description: str = None,
         dc_id: int = None,
+        folder_id: int = None,
         has_protected_content: bool = None,
         invite_link: str = None,
         pinned_message=None,
@@ -196,15 +247,21 @@ class Chat(Object):
         linked_chat: "types.Chat" = None,
         send_as_chat: "types.Chat" = None,
         available_reactions: Optional["types.ChatReactions"] = None,
+        level: int = None,
+        reply_color: "types.ChatColor" = None,
+        profile_color: "types.ChatColor" = None,
+        business_info: "types.BusinessInfo" = None,
+        business_intro: "types.BusinessIntro" = None,
+        birthday: "types.Birthday" = None,
+        raw: Union["raw.base.Chat", "raw.base.User", "raw.base.ChatFull", "raw.base.UserFull"] = None,
         has_visible_history: bool = None,
         has_hidden_members: bool = None,
-        is_forum: bool = None,
-        birthday: "types.Birthday" = None
     ):
         super().__init__(client)
 
         self.id = id
         self.type = type
+        self.is_forum = is_forum
         self.is_verified = is_verified
         self.is_members_hidden = is_members_hidden
         self.is_restricted = is_restricted
@@ -214,16 +271,21 @@ class Chat(Object):
         self.is_fake = is_fake
         self.is_deactivated = is_deactivated
         self.is_support = is_support
+        self.is_stories_hidden = is_stories_hidden
+        self.is_stories_unavailable = is_stories_unavailable
+        self.is_business_bot = is_business_bot
         self.title = title
         self.username = username
         self.usernames = usernames
         self.first_name = first_name
         self.last_name = last_name
         self.photo = photo
+        self.stories = stories
         self.wallpaper = wallpaper
         self.bio = bio
         self.description = description
         self.dc_id = dc_id
+        self.folder_id = folder_id
         self.has_protected_content = has_protected_content
         self.invite_link = invite_link
         self.pinned_message = pinned_message
@@ -238,14 +300,15 @@ class Chat(Object):
         self.linked_chat = linked_chat
         self.send_as_chat = send_as_chat
         self.available_reactions = available_reactions
+        self.level = level
+        self.reply_color = reply_color
+        self.profile_color = profile_color
+        self.business_info = business_info
+        self.business_intro = business_intro
+        self.birthday = birthday
+        self.raw = raw
         self.has_visible_history = has_visible_history
         self.has_hidden_members = has_hidden_members
-        self.is_forum = is_forum
-        self.birthday = birthday
-
-    @property
-    def full_name(self) -> str:
-        return " ".join(filter(None, [self.first_name, self.last_name])) or None
 
     @staticmethod
     def _parse_user_chat(client, user: raw.types.User) -> "Chat":
@@ -259,13 +322,19 @@ class Chat(Object):
             is_scam=getattr(user, "scam", None),
             is_fake=getattr(user, "fake", None),
             is_support=getattr(user, "support", None),
-            username=user.username,
+            is_stories_hidden=getattr(user, "stories_hidden", None),
+            is_stories_unavailable=getattr(user, "stories_unavailable", None),
+            is_business_bot=getattr(user, "bot_business", None),
+            username=user.username or (user.usernames[0].username if user.usernames else None),
+            usernames=types.List([types.Username._parse(r) for r in user.usernames]) or None,
             first_name=user.first_name,
             last_name=user.last_name,
             photo=types.ChatPhoto._parse(client, user.photo, peer_id, user.access_hash),
             restrictions=types.List([types.Restriction._parse(r) for r in user.restriction_reason]) or None,
             dc_id=getattr(getattr(user, "photo", None), "dc_id", None),
-            usernames=types.List([types.Username._parse(r) for r in user.usernames]) or None,
+            reply_color=types.ChatColor._parse(getattr(user, "color", None)),
+            profile_color=types.ChatColor._parse_profile_color(getattr(user, "profile_color", None)),
+            raw=user,
             client=client
         )
 
@@ -288,7 +357,7 @@ class Chat(Object):
             members_count=getattr(chat, "participants_count", None),
             dc_id=getattr(getattr(chat, "photo", None), "dc_id", None),
             has_protected_content=getattr(chat, "noforwards", None),
-            usernames=types.List([types.Username._parse(r) for r in usernames]) or None,
+            raw=chat,
             client=client
         )
 
@@ -302,12 +371,15 @@ class Chat(Object):
         return Chat(
             id=peer_id,
             type=enums.ChatType.SUPERGROUP if getattr(channel, "megagroup", None) else enums.ChatType.CHANNEL,
+            is_forum=getattr(channel, "forum", None) if getattr(channel, "megagroup", None) else None,
             is_verified=getattr(channel, "verified", None),
             is_restricted=getattr(channel, "restricted", None),
             is_creator=getattr(channel, "creator", None),
             is_admin=True if admin_rights else None,
             is_scam=getattr(channel, "scam", None),
             is_fake=getattr(channel, "fake", None),
+            is_stories_hidden=getattr(channel, "stories_hidden", None),
+            is_stories_unavailable=getattr(channel, "stories_unavailable", None),
             title=channel.title,
             username=getattr(channel, "username", None),
             usernames=types.List([types.Username._parse(r) for r in usernames]) or None,
@@ -318,8 +390,11 @@ class Chat(Object):
             members_count=getattr(channel, "participants_count", None),
             dc_id=getattr(getattr(channel, "photo", None), "dc_id", None),
             has_protected_content=getattr(channel, "noforwards", None),
-            client=client,
-            is_forum=getattr(channel, "forum"),
+            level=getattr(channel, "level", None),
+            reply_color=types.ChatColor._parse(getattr(channel, "color", None)),
+            profile_color=types.ChatColor._parse(getattr(channel, "profile_color", None)),
+            raw=channel,
+            client=client
         )
 
     @staticmethod
@@ -344,9 +419,9 @@ class Chat(Object):
 
     @staticmethod
     def _parse_dialog(client, peer, users: dict, chats: dict):
-        if isinstance(peer, raw.types.PeerUser):
+        if isinstance(peer, (raw.types.PeerUser, raw.types.InputPeerUser)):
             return Chat._parse_user_chat(client, users[peer.user_id])
-        elif isinstance(peer, raw.types.PeerChat):
+        elif isinstance(peer, (raw.types.PeerChat, raw.types.InputPeerChat)):
             return Chat._parse_chat_chat(client, chats[peer.chat_id])
         else:
             return Chat._parse_channel_chat(client, chats[peer.channel_id])
@@ -361,7 +436,11 @@ class Chat(Object):
 
             parsed_chat = Chat._parse_user_chat(client, users[full_user.id])
             parsed_chat.bio = full_user.about
+            parsed_chat.folder_id = getattr(full_user, "folder_id", None)
+            parsed_chat.business_info = types.BusinessInfo._parse(client, full_user, users)
+            parsed_chat.business_intro = await types.BusinessIntro._parse(client, getattr(full_user, "business_intro", None))
             parsed_chat.birthday = types.Birthday._parse(getattr(full_user, "birthday", None))
+            parsed_chat.raw = full_user
 
             if full_user.pinned_msg_id:
                 parsed_chat.pinned_message = await client.get_messages(
@@ -376,6 +455,17 @@ class Chat(Object):
                     message_ids=full_user.personal_channel_message
                 )
 
+            if full_user.stories:
+                peer_stories: raw.types.PeerStories = full_user.stories
+                parsed_chat.stories = types.List(
+                    [
+                        await types.Story._parse(
+                            client, story, users, chats, peer_stories.peer
+                        )
+                        for story in peer_stories.stories
+                    ]
+                ) or None
+
             if getattr(full_user, "wallpaper") and isinstance(full_user.wallpaper, raw.types.WallPaper):
                 parsed_chat.wallpaper = types.Document._parse(client, full_user.wallpaper.document, "wallpaper.jpg")
         else:
@@ -386,12 +476,8 @@ class Chat(Object):
                 parsed_chat = Chat._parse_chat_chat(client, chat_raw)
                 parsed_chat.description = full_chat.about or None
 
-                parsed_chat.members_count = getattr(full_chat, "participants_count")
-                if parsed_chat.members_count:
-                    parsed_chat.members_count = int(parsed_chat.members_count)
-
-                parsed_chat.has_visible_history = not getattr(full_chat, "hidden_prehistory", False)
-                parsed_chat.has_hidden_members = not getattr(full_chat, "can_view_participants", True)
+                if isinstance(full_chat.participants, raw.types.ChatParticipants):
+                    parsed_chat.members_count = len(full_chat.participants.participants)
             else:
                 parsed_chat = Chat._parse_channel_chat(client, chat_raw)
                 parsed_chat.members_count = full_chat.participants_count
@@ -400,6 +486,7 @@ class Chat(Object):
                 parsed_chat.can_set_sticker_set = full_chat.can_set_stickers
                 parsed_chat.sticker_set_name = getattr(full_chat.stickerset, "short_name", None)
                 parsed_chat.is_members_hidden = full_chat.participants_hidden
+                parsed_chat.folder_id = getattr(full_chat, "folder_id", None)
 
                 linked_chat_raw = chats.get(full_chat.linked_chat_id, None)
 
@@ -416,6 +503,17 @@ class Chat(Object):
 
                     parsed_chat.send_as_chat = Chat._parse_chat(client, send_as_raw)
 
+                if full_chat.stories:
+                    peer_stories: raw.types.PeerStories = full_chat.stories
+                    parsed_chat.stories = types.List(
+                        [
+                            await types.Story._parse(
+                                client, story, users, chats, peer_stories.peer
+                            )
+                            for story in peer_stories.stories
+                        ]
+                    ) or None
+
                 if full_chat.wallpaper and isinstance(full_chat.wallpaper, raw.types.WallPaper):
                     parsed_chat.wallpaper = types.Document._parse(client, full_chat.wallpaper.document, "wallpaper.jpg")
 
@@ -429,6 +527,7 @@ class Chat(Object):
                 parsed_chat.invite_link = full_chat.exported_invite.link
 
             parsed_chat.available_reactions = types.ChatReactions._parse(client, full_chat.available_reactions)
+            parsed_chat.raw = full_chat
 
         return parsed_chat
 
@@ -440,6 +539,10 @@ class Chat(Object):
             return Chat._parse_user_chat(client, chat)
         else:
             return Chat._parse_channel_chat(client, chat)
+
+    @property
+    def full_name(self) -> str:
+        return " ".join(filter(None, [self.first_name, self.last_name])) or self.title or None
 
     async def archive(self):
         """Bound method *archive* of :obj:`~pyrogram.types.Chat`.
@@ -933,7 +1036,7 @@ class Chat(Object):
         query: str = "",
         limit: int = 0,
         filter: "enums.ChatMembersFilter" = enums.ChatMembersFilter.SEARCH
-    ) -> Optional[AsyncGenerator["types.ChatMember", None]]:
+    ) -> AsyncGenerator["types.ChatMember", None]:
         """Bound method *get_members* of :obj:`~pyrogram.types.Chat`.
 
         Use as a shortcut for:
