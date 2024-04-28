@@ -25,6 +25,7 @@ import struct
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime, timezone
 from getpass import getpass
+import re
 from typing import Union, List, Dict, Optional
 
 import pyrogram
@@ -41,10 +42,10 @@ async def ainput(prompt: str = "", *, hide: bool = False):
 
 
 def get_input_media_from_file_id(
-    file_id: str,
-    expected_file_type: FileType = None,
-    ttl_seconds: int = None,
-    has_spoiler: bool = None
+        file_id: str,
+        expected_file_type: FileType = None,
+        ttl_seconds: int = None,
+        has_spoiler: bool = None
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -88,9 +89,9 @@ def get_input_media_from_file_id(
 
 
 async def parse_messages(
-    client,
-    messages: "raw.types.messages.Messages",
-    replies: int = 1
+        client,
+        messages: "raw.types.messages.Messages",
+        replies: int = 1
 ) -> List["types.Message"]:
     users = {i.id: i for i in messages.users}
     chats = {i.id: i for i in messages.chats}
@@ -208,42 +209,29 @@ MAX_USER_ID_OLD = 2147483647
 MAX_USER_ID = 999999999999
 
 
-def get_raw_peer_id(peer: raw.base.Peer) -> Optional[int]:
+def get_raw_peer_id(peer: Union[raw.base.Peer, raw.base.InputPeer]) -> Optional[int]:
     """Get the raw peer id from a Peer object"""
-    if isinstance(peer, raw.types.PeerUser):
+    if isinstance(peer, (raw.types.PeerUser, raw.types.InputPeerUser)):
         return peer.user_id
 
-    if isinstance(peer, raw.types.PeerChat):
+    if isinstance(peer, (raw.types.PeerChat, raw.types.InputPeerChat)):
         return peer.chat_id
 
-    if isinstance(peer, raw.types.PeerChannel):
-        return peer.channel_id
-
-    return None
-
-def get_input_peer_id(peer: raw.base.InputPeer) -> Optional[int]:
-    """Get the raw peer id from a InputPeer object"""
-    if isinstance(peer, raw.types.InputPeerUser):
-        return peer.user_id
-
-    if isinstance(peer, raw.types.InputPeerChat):
-        return peer.chat_id
-
-    if isinstance(peer, raw.types.InputPeerChannel):
+    if isinstance(peer, (raw.types.PeerChannel, raw.types.InputPeerChannel)):
         return peer.channel_id
 
     return None
 
 
-def get_peer_id(peer: raw.base.Peer) -> int:
+def get_peer_id(peer: Union[raw.base.Peer, raw.base.InputPeer]) -> int:
     """Get the non-raw peer id from a Peer object"""
-    if isinstance(peer, raw.types.PeerUser):
+    if isinstance(peer, (raw.types.PeerUser, raw.types.InputPeerUser)):
         return peer.user_id
 
-    if isinstance(peer, raw.types.PeerChat):
+    if isinstance(peer, (raw.types.PeerChat, raw.types.InputPeerChat)):
         return -peer.chat_id
 
-    if isinstance(peer, raw.types.PeerChannel):
+    if isinstance(peer, (raw.types.PeerChannel, raw.types.InputPeerChannel)):
         return MAX_CHANNEL_ID - peer.channel_id
 
     raise ValueError(f"Peer type invalid: {peer}")
@@ -283,8 +271,8 @@ def xor(a: bytes, b: bytes) -> bytes:
 
 
 def compute_password_hash(
-    algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
-    password: str
+        algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
+        password: str
 ) -> bytes:
     hash1 = sha256(algo.salt1 + password.encode() + algo.salt1)
     hash2 = sha256(algo.salt2 + hash1 + algo.salt2)
@@ -295,8 +283,8 @@ def compute_password_hash(
 
 # noinspection PyPep8Naming
 def compute_password_check(
-    r: raw.types.account.Password,
-    password: str
+        r: raw.types.account.Password,
+        password: str
 ) -> raw.types.InputCheckPasswordSRP:
     algo = r.current_algo
 
@@ -355,10 +343,10 @@ def compute_password_check(
 
 
 async def parse_text_entities(
-    client: "pyrogram.Client",
-    text: str,
-    parse_mode: enums.ParseMode,
-    entities: List["types.MessageEntity"]
+        client: "pyrogram.Client",
+        text: str,
+        parse_mode: enums.ParseMode,
+        entities: List["types.MessageEntity"]
 ) -> Dict[str, Union[str, List[raw.base.MessageEntity]]]:
     if entities:
         # Inject the client instance because parsing user mentions requires it
@@ -379,6 +367,10 @@ def zero_datetime() -> datetime:
     return datetime.fromtimestamp(0, timezone.utc)
 
 
+def max_datetime() -> datetime:
+    return datetime.fromtimestamp((1 << 31) - 1, timezone.utc)
+
+
 def timestamp_to_datetime(ts: Optional[int]) -> Optional[datetime]:
     return datetime.fromtimestamp(ts) if ts else None
 
@@ -387,11 +379,20 @@ def datetime_to_timestamp(dt: Optional[datetime]) -> Optional[int]:
     return int(dt.timestamp()) if dt else None
 
 
+def get_first_url(text):
+    text = re.sub(r"^\s*(<[\w<>=\s\"]*>)\s*", r"\1", text)
+    text = re.sub(r"\s*(</[\w</>]*>)\s*$", r"\1", text)
+
+    matches = re.findall(r"(https?):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])", text)
+
+    return f"{matches[0][0]}://{matches[0][1]}{matches[0][2]}" if matches else None
+
+
 def get_reply_head_fm(message_thread_id: int, reply_to_message_id: int) -> raw.types.InputReplyToMessage:
     reply_to = None
     if (
-        reply_to_message_id or
-        message_thread_id
+            reply_to_message_id or
+            message_thread_id
     ):
         if not reply_to_message_id:
             reply_to = raw.types.InputReplyToMessage(

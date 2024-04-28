@@ -37,7 +37,7 @@ class Str(str):
     def __init__(self, *args):
         super().__init__()
 
-        self.entities: list = None
+        self.entities: Optional[List["types.MessageEntity"]] = None
 
     def init(self, entities: list):
         self.entities = entities
@@ -302,6 +302,9 @@ class Message(Object, Update):
         web_app_data (:obj:`~pyrogram.types.WebAppData`, *optional*):
             Service message: web app data sent to the bot.
 
+        chat_ttl_period (``int``, *optional*):
+            Service message: chat TTL period changed.
+
         reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
             Additional interface options. An object for an inline keyboard, custom reply keyboard,
             instructions to remove reply keyboard or to force a reply from the user.
@@ -391,6 +394,7 @@ class Message(Object, Update):
         video_chat_ended: "types.VideoChatEnded" = None,
         video_chat_members_invited: "types.VideoChatMembersInvited" = None,
         web_app_data: "types.WebAppData" = None,
+        chat_ttl_period: int = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -422,6 +426,7 @@ class Message(Object, Update):
         self.scheduled = scheduled
         self.from_scheduled = from_scheduled
         self.media = media
+        self.show_above_text = show_above_text
         self.edit_date = edit_date
         self.edit_hidden = edit_hidden
         self.media_group_id = media_group_id
@@ -471,6 +476,7 @@ class Message(Object, Update):
         self.video_chat_ended = video_chat_ended
         self.video_chat_members_invited = video_chat_members_invited
         self.web_app_data = web_app_data
+        self.chat_ttl_period = chat_ttl_period
         self.reactions = reactions
         self.raw = raw
 
@@ -524,6 +530,7 @@ class Message(Object, Update):
             video_chat_ended = None
             video_chat_members_invited = None
             web_app_data = None
+            chat_ttl_period = None
 
             service_type = None
 
@@ -573,6 +580,9 @@ class Message(Object, Update):
             elif isinstance(action, raw.types.MessageActionWebViewDataSentMe):
                 web_app_data = types.WebAppData._parse(action)
                 service_type = enums.MessageServiceType.WEB_APP_DATA
+            elif isinstance(action, raw.types.MessageActionSetMessagesTTL):
+                chat_ttl_period = action.period
+                service_type = enums.MessageServiceType.CHAT_TTL_CHANGED
 
             from_user = types.User._parse(client, users.get(user_id, None))
             sender_chat = types.Chat._parse(client, message, users, chats, is_chat=False) if not from_user else None
@@ -599,6 +609,7 @@ class Message(Object, Update):
                 video_chat_ended=video_chat_ended,
                 video_chat_members_invited=video_chat_members_invited,
                 web_app_data=web_app_data,
+                chat_ttl_period=chat_ttl_period,
                 raw=message,
                 client=client
                 # TODO: supergroup_chat_created
@@ -2827,6 +2838,154 @@ class Message(Object, Update):
             progress_args=progress_args
         )
 
+    async def reply_web_page(
+        self,
+        text: str = None,
+        quote: bool = None,
+        url: str = None,
+        prefer_large_media: bool = None,
+        prefer_small_media: bool = None,
+        parse_mode: Optional["enums.ParseMode"] = None,
+        entities: List["types.MessageEntity"] = None,
+        disable_notification: bool = None,
+        message_thread_id: int = None,
+        show_above_text: bool = None,
+        reply_to_message_id: int = None,
+        reply_to_chat_id: Union[int, str] = None,
+        reply_to_story_id: int = None,
+        quote_text: str = None,
+        quote_entities: List["types.MessageEntity"] = None,
+        quote_offset: int = None,
+        schedule_date: datetime = None,
+        protect_content: bool = None,
+        business_connection_id: str = None,
+        reply_markup: Union[
+            "types.InlineKeyboardMarkup",
+            "types.ReplyKeyboardMarkup",
+            "types.ReplyKeyboardRemove",
+            "types.ForceReply"
+        ] = None
+    ) -> "types.Message":
+        """Bound method *reply_web_page* of :obj:`~pyrogram.types.Message`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            await client.send_web_page(
+                chat_id=message.chat.id,
+                url="https://docs.pyrogram.org"
+            )
+
+        Example:
+            .. code-block:: python
+
+                await message.reply_web_page("https://docs.pyrogram.org")
+
+        Parameters:
+            text (``str``, *optional*):
+                Text of the message to be sent.
+
+            url (``str``, *optional*):
+                Link that will be previewed.
+                If url not specified, the first URL found in the text will be used.
+
+            parse_mode (:obj:`~pyrogram.enums.ParseMode`, *optional*):
+                By default, texts are parsed using both Markdown and HTML styles.
+                You can combine both syntaxes together.
+
+            entities (List of :obj:`~pyrogram.types.MessageEntity`):
+                List of special entities that appear in message text, which can be specified instead of *parse_mode*.
+
+            prefer_large_media (``bool``, *optional*):
+                If True, media in the link preview will be larger.
+                Ignored if the URL isn't explicitly specified or media size change isn't supported for the preview.
+
+            prefer_small_media (``bool``, *optional*):
+                If True, media in the link preview will be smaller.
+                Ignored if the URL isn't explicitly specified or media size change isn't supported for the preview.
+
+            show_above_text (``bool``, *optional*):
+                If True, link preview will be shown above the message text.
+                Otherwise, the link preview will be shown below the message text.
+
+            disable_notification (``bool``, *optional*):
+                Sends the message silently.
+                Users will receive a notification with no sound.
+
+            message_thread_id (``int``, *optional*):
+                Unique identifier for the target message thread (topic) of the forum.
+                for forum supergroups only.
+
+            reply_to_message_id (``int``, *optional*):
+                If the message is a reply, ID of the original message.
+
+            reply_to_chat_id (``int`` | ``str``, *optional*):
+                If the message is a reply, ID of the original chat.
+
+            reply_to_story_id (``int``, *optional*):
+                Unique identifier for the target story.
+
+            quote_text (``str``, *optional*):
+                Text of the quote to be sent.
+
+            quote_entities (List of :obj:`~pyrogram.types.MessageEntity`, *optional*):
+                List of special entities that appear in quote text, which can be specified instead of *parse_mode*.
+
+            quote_offset (``int``, *optional*):
+                Offset for quote in original message.
+
+            schedule_date (:py:obj:`~datetime.datetime`, *optional*):
+                Date when the message will be automatically sent.
+
+            protect_content (``bool``, *optional*):
+                Protects the contents of the sent message from forwarding and saving.
+
+            business_connection_id (``str``, *optional*):
+                Unique identifier of the business connection on behalf of which the message will be sent.
+
+            reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
+                Additional interface options. An object for an inline keyboard, custom reply keyboard,
+                instructions to remove reply keyboard or to force a reply from the user.
+
+        Returns:
+            :obj:`~pyrogram.types.Message`: On success, the sent message is returned.
+        """
+        if quote is None:
+            quote = self.chat.type != enums.ChatType.PRIVATE
+
+        if reply_to_message_id is None and quote:
+            reply_to_message_id = self.id
+
+        if message_thread_id is None:
+            message_thread_id = self.message_thread_id
+
+        if business_connection_id is None:
+            business_connection_id = self.business_connection_id
+
+        return await self._client.send_web_page(
+            chat_id=self.chat.id,
+            text=text,
+            url=url,
+            prefer_large_media=prefer_large_media,
+            prefer_small_media=prefer_small_media,
+            parse_mode=parse_mode,
+            entities=entities,
+            disable_notification=disable_notification,
+            message_thread_id=message_thread_id,
+            show_above_text=show_above_text,
+            reply_to_message_id=reply_to_message_id,
+            reply_to_chat_id=reply_to_chat_id,
+            reply_to_story_id=reply_to_story_id,
+            quote_text=quote_text,
+            quote_entities=quote_entities,
+            quote_offset=quote_offset,
+            schedule_date=schedule_date,
+            protect_content=protect_content,
+            business_connection_id=business_connection_id,
+            reply_markup=reply_markup
+        )
+
     async def edit_text(
         self,
         text: str,
@@ -3684,6 +3843,62 @@ class Message(Object, Update):
             RPCError: In case of a Telegram RPC error.
         """
         return await self._client.unpin_chat_message(
+            chat_id=self.chat.id,
+            message_id=self.id
+        )
+
+    async def read(self) -> bool:
+        """Bound method *read* of :obj:`~pyrogram.types.Message`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            await client.read_chat_history(
+                chat_id=message.chat.id,
+                max_id=message_id
+            )
+
+        Example:
+            .. code-block:: python
+
+                await message.read()
+
+        Returns:
+            True on success.
+
+        Raises:
+            RPCError: In case of a Telegram RPC error.
+        """
+        return await self._client.read_chat_history(
+            chat_id=self.chat.id,
+            max_id=self.id
+        )
+
+    async def view(self) -> bool:
+        """Bound method *view* of :obj:`~pyrogram.types.Message`.
+
+        Use as a shortcut for:
+
+        .. code-block:: python
+
+            await client.view_messages(
+                chat_id=message.chat.id,
+                message_id=message_id
+            )
+
+        Example:
+            .. code-block:: python
+
+                await message.view()
+
+        Returns:
+            True on success.
+
+        Raises:
+            RPCError: In case of a Telegram RPC error.
+        """
+        return await self._client.view_messages(
             chat_id=self.chat.id,
             message_id=self.id
         )
