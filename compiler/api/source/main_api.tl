@@ -6,6 +6,13 @@
 
 ---types---
 
+int ? = Int;
+long ? = Long;
+double ? = Double;
+string ? = String;
+
+bytes = Bytes;
+
 // boolFalse#bc799737 = Bool;  // Parsed manually
 // boolTrue#997275b5 = Bool;  // Parsed manually
 
@@ -16,6 +23,14 @@
 // error#c4b9f9bb code:int text:string = Error;  // Not used
 
 // null#56730bcc = Null;  // Parsed manually
+
+ipPort#d433ad73 ipv4:int port:int = IpPort;
+ipPortSecret#37982646 ipv4:int port:int secret:bytes = IpPort;
+accessPointRule#4679b65f phone_prefix_rules:string dc_id:int ips:vector<IpPort> = AccessPointRule;
+help.configSimple#5a592a6c date:int expires:int rules:vector<AccessPointRule> = help.ConfigSimple;
+
+inputPeerPhotoFileLocationLegacy#27d69997 flags:# big:flags.0?true peer:InputPeer volume_id:long local_id:int = InputFileLocation;
+inputStickerSetThumbLegacy#dbaeae9 stickerset:InputStickerSet volume_id:long local_id:int = InputFileLocation;
 
 inputPeerEmpty#7f3b18ea = InputPeer;
 inputPeerSelf#7da07ec9 = InputPeer;
@@ -421,6 +436,7 @@ updateBotNewBusinessMessage#9ddb347c flags:# connection_id:string message:Messag
 updateBotEditBusinessMessage#7df587c flags:# connection_id:string message:Message reply_to_message:flags.0?Message qts:int = Update;
 updateBotDeleteBusinessMessage#a02a982e connection_id:string peer:Peer messages:Vector<int> qts:int = Update;
 updateNewStoryReaction#1824e40b story_id:int peer:Peer reaction:Reaction = Update;
+updateBroadcastRevenueTransactions#5c65d358 balances:BroadcastRevenueBalances = Update;
 
 updates.state#a56c2a3e pts:int qts:int date:int seq:int unread_count:int = updates.State;
 
@@ -2439,5 +2455,9 @@ smsjobs.getSmsJob#778d902f job_id:string = SmsJob;
 smsjobs.finishJob#4f1ebf24 flags:# job_id:string error:flags.0?string = Bool;
 
 fragment.getCollectibleInfo#be1e85ba collectible:InputCollectible = fragment.CollectibleInfo;
+
+test.useError = Error;
+test.useConfigSimple = help.ConfigSimple;
+test.parseInputAppEvent = InputAppEvent;
 
 // LAYER 179

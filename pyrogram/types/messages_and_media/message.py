@@ -3049,6 +3049,7 @@ class Message(Object, Update):
             entities=entities,
             disable_web_page_preview=disable_web_page_preview,
             show_above_text=show_above_text,
+            schedule_date=self.date if self.scheduled else None,
             reply_markup=reply_markup
         )
 
@@ -3104,7 +3105,8 @@ class Message(Object, Update):
             caption=caption,
             parse_mode=parse_mode,
             caption_entities=caption_entities,
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
+            schedule_date=self.date if self.scheduled else None
         )
 
     async def edit_media(
@@ -3146,7 +3148,8 @@ class Message(Object, Update):
             chat_id=self.chat.id,
             message_id=self.id,
             media=media,
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
+            schedule_date=self.date if self.scheduled else None
         )
 
     async def edit_reply_markup(self, reply_markup: "types.InlineKeyboardMarkup" = None) -> "Message":
@@ -3188,6 +3191,7 @@ class Message(Object, Update):
         self,
         chat_id: Union[int, str],
         disable_notification: bool = None,
+        protect_content: bool = None,
         hide_sender_name: bool = None,
         hide_captions: bool = None,
         schedule_date: datetime = None
@@ -3222,6 +3226,9 @@ class Message(Object, Update):
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
 
+            protect_content (``bool``, *optional*):
+                Protects the contents of the sent message from forwarding and saving.
+
             hide_sender_name (``bool``, *optional*):
                 If True, the original author of the message will not be shown.
 
@@ -3239,9 +3246,11 @@ class Message(Object, Update):
             from_chat_id=self.chat.id,
             message_ids=self.id,
             disable_notification=disable_notification,
+            protect_content=protect_content,
             schedule_date=schedule_date,
             hide_sender_name=hide_sender_name,
-            hide_captions=hide_captions
+            hide_captions=hide_captions,
+            schedule_date=schedule_date
         )
 
     async def copy(
@@ -3470,7 +3479,8 @@ class Message(Object, Update):
         return await self._client.delete_messages(
             chat_id=self.chat.id,
             message_ids=self.id,
-            revoke=revoke
+            revoke=revoke,
+            is_scheduled=self.scheduled
         )
 
     async def click(self, x: Union[int, str] = 0, y: int = None, quote: bool = None, timeout: int = 10):

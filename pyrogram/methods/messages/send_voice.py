@@ -40,7 +40,7 @@ class SendVoice:
         caption_entities: List["types.MessageEntity"] = None,
         duration: int = 0,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_parameters: "types.ReplyParameters" = None,
         message_thread_id: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
@@ -89,15 +89,11 @@ class SendVoice:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_to_message_id (``int``, *optional*):
-                If the message is a reply, ID of the original message.
+            reply_parameters (:obj:`~pyrogram.types.ReplyParameters`, *optional*):
+                Description of the message to reply to
 
             message_thread_id (``int``, *optional*):
                 If the message is in a thread, ID of the original message.
-
-            partial_reply (``str``, *optional*):
-                Text to quote.
-                for reply_to_message only.
 
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
@@ -179,10 +175,15 @@ class SendVoice:
                     )
                 elif re.match("^https?://", voice):
                     media = raw.types.InputMediaDocumentExternal(
-                        url=voice
+                        url=voice,
+                        ttl_seconds=ttl_seconds
                     )
                 else:
-                    media = utils.get_input_media_from_file_id(voice, FileType.VOICE)
+                    media = utils.get_input_media_from_file_id(
+                        voice,
+                        FileType.VOICE,
+                        ttl_seconds=ttl_seconds
+                    )
             else:
                 mime_type = utils.voiceAudioUrlFuxUps(self, voice.name, 2)
                 file = await self.save_file(voice, progress=progress, progress_args=progress_args)
@@ -198,7 +199,11 @@ class SendVoice:
                     ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
                 )
 
-            reply_to = utils.get_reply_head_fm(message_thread_id, reply_to_message_id)
+            reply_to = await utils.get_reply_head_fm(
+                self,
+                message_thread_id,
+                reply_parameters
+            )
 
             while True:
                 try:
