@@ -191,7 +191,7 @@ class Client(Methods):
             A value that is too high may result in network related issues.
             Defaults to 1.
 
-        init_connection_params (:obj:`~raw.base.JSONValue`, *optional*):
+        init_connection_params (:obj:`~pyrogram.raw.base.JSONValue`, *optional*):
             Additional initConnection parameters.
             For now, only the tz_offset field is supported, for specifying timezone offset in seconds.
     """
