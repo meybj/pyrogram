@@ -25,7 +25,7 @@ import pyrogram
 from pyrogram import raw, enums
 from pyrogram import types
 from pyrogram import utils
-from pyrogram.errors import MessageIdsEmpty, PeerIdInvalid
+from pyrogram.errors import MessageIdsEmpty, PeerIdInvalid, ChannelPrivate
 from pyrogram.parser import utils as parser_utils, Parser
 from ..object import Object
 from ..update import Update
@@ -37,22 +37,22 @@ class Str(str):
     def __init__(self, *args):
         super().__init__()
 
-        self.entities = None
+        self.entities: list = None
 
-    def init(self, entities):
+    def init(self, entities: list):
         self.entities = entities
 
         return self
 
     @property
-    def markdown(self):
+    def markdown(self) -> str:
         return Parser.unparse(self, self.entities, False)
 
     @property
-    def html(self):
+    def html(self) -> str:
         return Parser.unparse(self, self.entities, True)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> str:
         return parser_utils.remove_surrogates(parser_utils.add_surrogates(self)[item])
 
 
@@ -123,10 +123,18 @@ class Message(Object, Update):
             This field will contain the enumeration type of the media message.
             You can use ``media = getattr(message, message.media.value)`` to access the media message.
 
+        show_above_text (``bool``, *optional*):
+            If True, link preview will be shown above the message text.
+            Otherwise, the link preview will be shown below the message text.
+
         edit_date (:py:obj:`~datetime.datetime`, *optional*):
             Date the message was last edited.
 
-        media_group_id (``str``, *optional*):
+        edit_hidden (``bool``, *optional*):
+            The message shown as not modified.
+            A message can be not modified in case it has received a reaction.
+
+        media_group_id (``int``, *optional*):
             The unique identifier of a media message group this message belongs to.
 
         author_signature (``str``, *optional*):
@@ -257,8 +265,8 @@ class Message(Object, Update):
 
         views (``int``, *optional*):
             Channel post views.
-	    
-	forwards (``int``, *optional*):
+
+        forwards (``int``, *optional*):
             Channel post forwards.
 
         via_bot (:obj:`~pyrogram.types.User`):
@@ -301,6 +309,9 @@ class Message(Object, Update):
         reactions (List of :obj:`~pyrogram.types.Reaction`):
             List of the reactions to this message.
 
+        raw (``pyrogram.raw.types.Message``, *optional*):
+            The raw message object, as received from the Telegram API.
+
         link (``str``, *property*):
             Generate a link to this message, only for groups and channels.
     """
@@ -330,10 +341,11 @@ class Message(Object, Update):
         service: "enums.MessageServiceType" = None,
         scheduled: bool = None,
         from_scheduled: bool = None,
-        edit_hide: bool = False,
         media: "enums.MessageMediaType" = None,
+        show_above_text: bool = None,
         edit_date: datetime = None,
-        media_group_id: str = None,
+        edit_hidden: bool = None,
+        media_group_id: int = None,
         author_signature: str = None,
         has_protected_content: bool = None,
         has_media_spoiler: bool = None,
@@ -385,7 +397,8 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        reactions: List["types.Reaction"] = None
+        reactions: List["types.Reaction"] = None,
+        raw: "raw.types.Message" = None
     ):
         super().__init__(client)
 
@@ -410,7 +423,7 @@ class Message(Object, Update):
         self.from_scheduled = from_scheduled
         self.media = media
         self.edit_date = edit_date
-        self.edit_hide = edit_hide
+        self.edit_hidden = edit_hidden
         self.media_group_id = media_group_id
         self.author_signature = author_signature
         self.has_protected_content = has_protected_content
@@ -459,6 +472,7 @@ class Message(Object, Update):
         self.video_chat_members_invited = video_chat_members_invited
         self.web_app_data = web_app_data
         self.reactions = reactions
+        self.raw = raw
 
     @staticmethod
     async def _parse(
@@ -470,7 +484,7 @@ class Message(Object, Update):
         replies: int = 1
     ):
         if isinstance(message, raw.types.MessageEmpty):
-            return Message(id=message.id, empty=True, client=client)
+            return Message(id=message.id, empty=True, client=client, raw=message)
 
         from_id = utils.get_raw_peer_id(message.from_id)
         peer_id = utils.get_raw_peer_id(message.peer_id)
@@ -495,6 +509,7 @@ class Message(Object, Update):
         if isinstance(message, raw.types.MessageService):
             action = message.action
 
+            text = None
             new_chat_members = None
             left_chat_member = None
             new_chat_title = None
@@ -569,6 +584,7 @@ class Message(Object, Update):
                 from_user=from_user,
                 sender_chat=sender_chat,
                 service=service_type,
+                text=text,
                 new_chat_members=new_chat_members,
                 left_chat_member=left_chat_member,
                 new_chat_title=new_chat_title,
@@ -583,6 +599,7 @@ class Message(Object, Update):
                 video_chat_ended=video_chat_ended,
                 video_chat_members_invited=video_chat_members_invited,
                 web_app_data=web_app_data,
+                raw=message,
                 client=client
                 # TODO: supergroup_chat_created
             )
@@ -708,7 +725,7 @@ class Message(Object, Update):
                             video_attributes = attributes[raw.types.DocumentAttributeVideo]
 
                             if video_attributes.round_message:
-                                video_note = types.VideoNote._parse(client, doc, video_attributes)
+                                video_note = types.VideoNote._parse(client, doc, video_attributes, media.ttl_seconds)
                                 media_type = enums.MessageMediaType.VIDEO_NOTE
                             else:
                                 video = types.Video._parse(client, doc, video_attributes, file_name, media.ttl_seconds)
@@ -718,7 +735,7 @@ class Message(Object, Update):
                             audio_attributes = attributes[raw.types.DocumentAttributeAudio]
 
                             if audio_attributes.voice:
-                                voice = types.Voice._parse(client, doc, audio_attributes)
+                                voice = types.Voice._parse(client, doc, audio_attributes, media.ttl_seconds)
                                 media_type = enums.MessageMediaType.VOICE
                             else:
                                 audio = types.Audio._parse(client, doc, audio_attributes, file_name)
@@ -728,7 +745,14 @@ class Message(Object, Update):
                             media_type = enums.MessageMediaType.DOCUMENT
                 elif isinstance(media, raw.types.MessageMediaWebPage):
                     if isinstance(media.webpage, raw.types.WebPage):
-                        web_page = types.WebPage._parse(client, media.webpage)
+                        web_page = types.WebPage._parse(
+                            client,
+                            media.webpage,
+                            getattr(media, "force_large_media", None),
+                            getattr(media, "force_small_media", None),
+                            getattr(media, "manual", None),
+                            getattr(media, "safe", None)
+                        )
                         media_type = enums.MessageMediaType.WEB_PAGE
                     else:
                         media = None
@@ -799,8 +823,9 @@ class Message(Object, Update):
                 scheduled=is_scheduled,
                 from_scheduled=message.from_scheduled,
                 media=media_type,
-                edit_hide=message.edit_hide,
+                show_above_text=getattr(message, "invert_media", None),
                 edit_date=utils.timestamp_to_datetime(message.edit_date),
+                edit_hidden=message.edit_hide,
                 media_group_id=message.grouped_id,
                 photo=photo,
                 location=location,
@@ -823,6 +848,7 @@ class Message(Object, Update):
                 outgoing=message.out,
                 reply_markup=reply_markup,
                 reactions=reactions,
+                raw=message,
                 client=client
             )
 
@@ -836,18 +862,30 @@ class Message(Object, Update):
                     parsed_message.reply_to_message_id = message.reply_to.story_id
 
                 if replies:
-                    try:
+                    is_cross_chat = getattr(message.reply_to, "reply_to_peer_id", None) and getattr(
+                        message.reply_to.reply_to_peer_id, "channel_id", None)
+
+                    if is_cross_chat:
+                        key = (utils.get_channel_id(message.reply_to.reply_to_peer_id.channel_id),
+                               message.reply_to.reply_to_msg_id)
+                        reply_to_params = {"chat_id": key[0], 'message_ids': key[1]}
+                    else:
                         key = (parsed_message.chat.id, parsed_message.reply_to_message_id)
+                        reply_to_params = {'chat_id': key[0], 'reply_to_message_ids': message.id}
+
+                    try:
                         reply_to_message = client.message_cache[key]
 
                         if not reply_to_message:
-                            reply_to_message = await client.get_messages(
-                                parsed_message.chat.id,
-                                reply_to_message_ids=message.id,
-                                replies=replies - 1
-                            )
-
-                        parsed_message.reply_to_message = reply_to_message
+                            try:
+                                reply_to_message = await client.get_messages(
+                                    replies=replies - 1,
+                                    **reply_to_params
+                                )
+                            except ChannelPrivate:
+                                pass
+                        if reply_to_message and not reply_to_message.forum_topic_created:
+                            parsed_message.reply_to_message = reply_to_message
                     except MessageIdsEmpty:
                         pass
 
@@ -868,24 +906,24 @@ class Message(Object, Update):
 
     async def get_media_group(self) -> List["types.Message"]:
         """Bound method *get_media_group* of :obj:`~pyrogram.types.Message`.
-        
+
         Use as a shortcut for:
-        
+
         .. code-block:: python
 
             await client.get_media_group(
                 chat_id=message.chat.id,
                 message_id=message.id
             )
-            
+
         Example:
             .. code-block:: python
 
                 await message.get_media_group()
-                
+
         Returns:
             List of :obj:`~pyrogram.types.Message`: On success, a list of messages of the media group is returned.
-            
+
         Raises:
             ValueError: In case the passed message id doesn't belong to a media group.
         """
@@ -903,6 +941,7 @@ class Message(Object, Update):
         entities: List["types.MessageEntity"] = None,
         disable_web_page_preview: bool = None,
         disable_notification: bool = None,
+        show_above_text: bool = None,
         reply_to_message_id: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
@@ -950,6 +989,10 @@ class Message(Object, Update):
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
+            show_above_text (``bool``, *optional*):
+                If True, link preview will be shown above the message text.
+                Otherwise, the link preview will be shown below the message text.
+
             reply_to_message_id (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
@@ -982,6 +1025,7 @@ class Message(Object, Update):
             entities=entities,
             disable_web_page_preview=disable_web_page_preview,
             disable_notification=disable_notification,
+            show_above_text=show_above_text,
             reply_to_message_id=reply_to_message_id,
             schedule_date=schedule_date,
             protect_content=protect_content,
@@ -1405,6 +1449,7 @@ class Message(Object, Update):
         vcard: str = "",
         disable_notification: bool = None,
         reply_to_message_id: int = None,
+        parse_mode: Optional["enums.ParseMode"] = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1454,6 +1499,10 @@ class Message(Object, Update):
             reply_to_message_id (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
+            parse_mode (:obj:`~pyrogram.enums.ParseMode`, *optional*):
+                By default, texts are parsed using both Markdown and HTML styles.
+                You can combine both syntaxes together.
+
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
                 instructions to remove reply keyboard or to force a reply from the user.
@@ -1478,6 +1527,7 @@ class Message(Object, Update):
             vcard=vcard,
             disable_notification=disable_notification,
             reply_to_message_id=reply_to_message_id,
+            parse_mode=parse_mode,
             reply_markup=reply_markup
         )
 
@@ -1494,6 +1544,7 @@ class Message(Object, Update):
         disable_notification: bool = None,
         reply_to_message_id: int = None,
         schedule_date: datetime = None,
+        protect_content: bool = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1546,7 +1597,7 @@ class Message(Object, Update):
 
             caption_entities (List of :obj:`~pyrogram.types.MessageEntity`):
                 List of special entities that appear in the caption, which can be specified instead of *parse_mode*.
-            
+
             file_name (``str``, *optional*):
                 File name of the document sent.
                 Defaults to file's path basename.
@@ -1565,6 +1616,9 @@ class Message(Object, Update):
             
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
+
+            protect_content (``bool``, *optional*):
+                Protects the contents of the sent message from forwarding and saving.
 
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
@@ -1618,6 +1672,7 @@ class Message(Object, Update):
             disable_notification=disable_notification,
             reply_to_message_id=reply_to_message_id,
             schedule_date=schedule_date,
+            protect_content=protect_content,
             reply_markup=reply_markup,
             progress=progress,
             progress_args=progress_args
@@ -1698,7 +1753,8 @@ class Message(Object, Update):
         result_id: str,
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None
+        reply_to_message_id: int = None,
+        parse_mode: Optional["enums.ParseMode"] = None,
     ) -> "Message":
         """Bound method *reply_inline_bot_result* of :obj:`~pyrogram.types.Message`.
 
@@ -1736,6 +1792,10 @@ class Message(Object, Update):
             reply_to_message_id (``bool``, *optional*):
                 If the message is a reply, ID of the original message.
 
+            parse_mode (:obj:`~pyrogram.enums.ParseMode`, *optional*):
+                By default, texts are parsed using both Markdown and HTML styles.
+                You can combine both syntaxes together.
+
         Returns:
             On success, the sent Message is returned.
 
@@ -1753,7 +1813,8 @@ class Message(Object, Update):
             query_id=query_id,
             result_id=result_id,
             disable_notification=disable_notification,
-            reply_to_message_id=reply_to_message_id
+            reply_to_message_id=reply_to_message_id,
+            parse_mode=parse_mode,
         )
 
     async def reply_location(
@@ -1836,7 +1897,8 @@ class Message(Object, Update):
         media: List[Union["types.InputMediaPhoto", "types.InputMediaVideo"]],
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None
+        reply_to_message_id: int = None,
+        parse_mode: Optional["enums.ParseMode"] = None,
     ) -> List["types.Message"]:
         """Bound method *reply_media_group* of :obj:`~pyrogram.types.Message`.
 
@@ -1872,6 +1934,10 @@ class Message(Object, Update):
             reply_to_message_id (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
+            parse_mode (:obj:`~pyrogram.enums.ParseMode`, *optional*):
+                By default, texts are parsed using both Markdown and HTML styles.
+                You can combine both syntaxes together.
+
         Returns:
             On success, a :obj:`~pyrogram.types.Messages` object is returned containing all the
             single messages sent.
@@ -1889,7 +1955,8 @@ class Message(Object, Update):
             chat_id=self.chat.id,
             media=media,
             disable_notification=disable_notification,
-            reply_to_message_id=reply_to_message_id
+            reply_to_message_id=reply_to_message_id,
+            parse_mode=parse_mode,
         )
 
     async def reply_photo(
@@ -3010,6 +3077,7 @@ class Message(Object, Update):
         reply_to_message_id: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
+        has_spoiler: bool = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -3065,6 +3133,9 @@ class Message(Object, Update):
             protect_content (``bool``, *optional*):
                 Protects the contents of the sent message from forwarding and saving.
 
+            has_spoiler (``bool``, *optional*):
+                True, if the message media is covered by a spoiler animation.
+
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
                 instructions to remove reply keyboard or to force a reply from the user.
@@ -3106,6 +3177,7 @@ class Message(Object, Update):
                 reply_to_message_id=reply_to_message_id,
                 schedule_date=schedule_date,
                 protect_content=protect_content,
+                has_spoiler=has_spoiler,
                 reply_markup=self.reply_markup if reply_markup is object else reply_markup
             )
 
@@ -3345,7 +3417,7 @@ class Message(Object, Update):
         else:
             await self.reply(button, quote=quote)
 
-    async def react(self, emoji: str = "", big: bool = False) -> bool:
+    async def react(self, emoji: Union[int, str, List[Union[int, str]]] = None, big: bool = False) -> bool:
         """Bound method *react* of :obj:`~pyrogram.types.Message`.
 
         Use as a shortcut for:
@@ -3364,10 +3436,11 @@ class Message(Object, Update):
                 await message.react(emoji="🔥")
 
         Parameters:
-            emoji (``str``, *optional*):
+            emoji (``int`` | ``str`` | List of ``int`` | ``str``, *optional*):
                 Reaction emoji.
-                Pass "" as emoji (default) to retract the reaction.
-             
+                Pass None as emoji (default) to retract the reaction.
+                Pass list of int or str to react multiple emojis.
+
             big (``bool``, *optional*):
                 Pass True to show a bigger and longer reaction.
                 Defaults to False.
