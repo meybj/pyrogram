@@ -195,6 +195,7 @@ def pyrogram_api():
             get_discussion_replies
             get_discussion_replies_count
             get_custom_emoji_stickers
+            send_web_page
         """,
         chats="""
         Chats
@@ -242,6 +243,7 @@ def pyrogram_api():
             create_group_call
             get_group_call_stream_channels
             get_similar_channels
+            set_chat_ttl
         """,
         users="""
         Users
@@ -258,6 +260,8 @@ def pyrogram_api():
             get_common_chats
             get_default_emoji_statuses
             set_emoji_status
+            update_status
+            check_username
         """,
         invite_links="""
         Invite Links
@@ -377,6 +381,7 @@ def pyrogram_api():
         users_chats="""
         Users & Chats
             User
+            Username
             Chat
             ChatPreview
             ChatPhoto
@@ -566,6 +571,7 @@ def pyrogram_api():
             Message.reply_video
             Message.reply_video_note
             Message.reply_voice
+            Message.reply_web_page
             Message.get_media_group
             Message.react
         """,
@@ -576,18 +582,22 @@ def pyrogram_api():
             Chat.set_title
             Chat.set_description
             Chat.set_photo
+            Chat.set_ttl
             Chat.ban_member
             Chat.unban_member
             Chat.restrict_member
             Chat.promote_member
+            Chat.join
+            Chat.leave
+            Chat.export_invite_link
             Chat.get_member
             Chat.get_members
             Chat.add_members
-            Chat.join
-            Chat.leave
             Chat.mark_unread
             Chat.set_protected_content
             Chat.unpin_all_messages
+            Chat.mute
+            Chat.unmute
         """,
         user="""
         User
@@ -595,6 +605,7 @@ def pyrogram_api():
             User.unarchive
             User.block
             User.unblock
+            User.get_common_chats
         """,
         callback_query="""
         Callback Query
