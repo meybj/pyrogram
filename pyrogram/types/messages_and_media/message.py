@@ -3195,7 +3195,7 @@ class Message(Object, Update):
                 reply_to_message_id=reply_to_message_id,
                 schedule_date=schedule_date,
                 protect_content=protect_content,
-                has_spoiler=has_spoiler,
+                has_spoiler=self.has_media_spoiler if has_spoiler is None else has_spoiler,
                 reply_markup=self.reply_markup if reply_markup is object else reply_markup
             )
 

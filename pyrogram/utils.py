@@ -43,7 +43,8 @@ async def ainput(prompt: str = "", *, hide: bool = False):
 def get_input_media_from_file_id(
     file_id: str,
     expected_file_type: FileType = None,
-    ttl_seconds: int = None
+    ttl_seconds: int = None,
+    has_spoiler: bool = None
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -68,6 +69,7 @@ def get_input_media_from_file_id(
                 access_hash=decoded.access_hash,
                 file_reference=decoded.file_reference
             ),
+            spoiler=has_spoiler,
             ttl_seconds=ttl_seconds
         )
 
@@ -78,6 +80,7 @@ def get_input_media_from_file_id(
                 access_hash=decoded.access_hash,
                 file_reference=decoded.file_reference
             ),
+            spoiler=has_spoiler,
             ttl_seconds=ttl_seconds
         )
 
@@ -218,6 +221,19 @@ def get_raw_peer_id(peer: raw.base.Peer) -> Optional[int]:
 
     return None
 
+def get_input_peer_id(peer: raw.base.InputPeer) -> Optional[int]:
+    """Get the raw peer id from a InputPeer object"""
+    if isinstance(peer, raw.types.InputPeerUser):
+        return peer.user_id
+
+    if isinstance(peer, raw.types.InputPeerChat):
+        return peer.chat_id
+
+    if isinstance(peer, raw.types.InputPeerChannel):
+        return peer.channel_id
+
+    return None
+
 
 def get_peer_id(peer: raw.base.Peer) -> int:
     """Get the non-raw peer id from a Peer object"""
@@ -341,7 +357,7 @@ def compute_password_check(
 async def parse_text_entities(
     client: "pyrogram.Client",
     text: str,
-    parse_mode: Optional[enums.ParseMode],
+    parse_mode: enums.ParseMode,
     entities: List["types.MessageEntity"]
 ) -> Dict[str, Union[str, List[raw.base.MessageEntity]]]:
     if entities:

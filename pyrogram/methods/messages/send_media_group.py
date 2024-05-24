@@ -47,6 +47,7 @@ class SendMediaGroup:
         message_thread_id: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
+        show_above_text: bool = None,
     ) -> List["types.Message"]:
         """Send a group of photos or videos as an album.
 
@@ -76,6 +77,10 @@ class SendMediaGroup:
 
             protect_content (``bool``, *optional*):
                 Protects the contents of the sent message from forwarding and saving.
+
+            show_above_text (``bool``, *optional*):
+                If True, link preview will be shown above the message text.
+                Otherwise, the link preview will be shown below the message text.
 
         Returns:
             List of :obj:`~pyrogram.types.Message`: On success, a list of the sent messages is returned.
@@ -138,7 +143,7 @@ class SendMediaGroup:
                             spoiler=i.has_spoiler
                         )
                     else:
-                        media = utils.get_input_media_from_file_id(i.media, FileType.PHOTO)
+                        media = utils.get_input_media_from_file_id(i.media, FileType.PHOTO, has_spoiler=i.has_spoiler)
                 else:
                     media = await self.invoke(
                         raw.functions.messages.UploadMedia(
@@ -169,6 +174,7 @@ class SendMediaGroup:
                                     thumb=await self.save_file(i.thumb),
                                     spoiler=i.has_spoiler,
                                     mime_type=self.guess_mime_type(i.media) or "video/mp4",
+                                    nosound_video=i.nosound_video,
                                     attributes=[
                                         raw.types.DocumentAttributeVideo(
                                             supports_streaming=i.supports_streaming or None,
@@ -210,7 +216,7 @@ class SendMediaGroup:
                             spoiler=i.has_spoiler
                         )
                     else:
-                        media = utils.get_input_media_from_file_id(i.media, FileType.VIDEO)
+                        media = utils.get_input_media_from_file_id(i.media, FileType.VIDEO, has_spoiler=i.has_spoiler)
                 else:
                     media = await self.invoke(
                         raw.functions.messages.UploadMedia(
@@ -220,6 +226,7 @@ class SendMediaGroup:
                                 thumb=await self.save_file(i.thumb),
                                 spoiler=i.has_spoiler,
                                 mime_type=self.guess_mime_type(getattr(i.media, "name", "video.mp4")) or "video/mp4",
+                                nosound_video=i.nosound_video,
                                 attributes=[
                                     raw.types.DocumentAttributeVideo(
                                         supports_streaming=i.supports_streaming or None,
@@ -403,7 +410,8 @@ class SendMediaGroup:
                 silent=disable_notification or None,
                 reply_to=reply_to,
                 schedule_date=utils.datetime_to_timestamp(schedule_date),
-                noforwards=protect_content
+                noforwards=protect_content,
+                invert_media=show_above_text
             ),
             sleep_threshold=60
         )
