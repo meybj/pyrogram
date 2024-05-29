@@ -17,8 +17,15 @@
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from .birthday import Birthday
+from .business_connection import BusinessConnection
+from .business_info import BusinessInfo
+from .business_intro import BusinessIntro
+from .business_recipients import BusinessRecipients
+from .business_weekly_open import BusinessWeeklyOpen
+from .business_working_hours import BusinessWorkingHours
 from .chat import Chat
 from .chat_admin_with_invite_links import ChatAdminWithInviteLinks
+from .chat_color import ChatColor
 from .chat_event import ChatEvent
 from .chat_event_filter import ChatEventFilter
 from .chat_invite_link import ChatInviteLink
@@ -33,6 +40,8 @@ from .chat_privileges import ChatPrivileges
 from .chat_reactions import ChatReactions
 from .dialog import Dialog
 from .emoji_status import EmojiStatus
+from .folder import Folder
+from .group_call_member import GroupCallMember
 from .invite_link_importer import InviteLinkImporter
 from .restriction import Restriction
 from .user import User
@@ -44,8 +53,9 @@ from .video_chat_started import VideoChatStarted
 
 __all__ = [
     "Birthday",
+    "BusinessConnection",
     "BusinessInfo",
-    "BusinessMessage",
+    "BusinessIntro",
     "BusinessRecipients",
     "BusinessWeeklyOpen",
     "BusinessWorkingHours",
@@ -63,6 +73,7 @@ __all__ = [
     "ChatInviteLink",
     "InviteLinkImporter",
     "ChatAdminWithInviteLinks",
+    "ChatColor",
     "VideoChatStarted",
     "VideoChatEnded",
     "VideoChatMembersInvited",
@@ -72,5 +83,7 @@ __all__ = [
     "ChatPrivileges",
     "ChatJoiner",
     "EmojiStatus",
+    "Folder",
+    "GroupCallMember",
     "ChatReactions"
 ]

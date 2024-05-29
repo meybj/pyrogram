@@ -30,6 +30,7 @@ class ForwardMessages:
         chat_id: Union[int, str],
         from_chat_id: Union[int, str],
         message_ids: Union[int, Iterable[int]],
+        message_thread_id: int = None,
         disable_notification: bool = None,
         schedule_date: datetime = None,
         hide_sender_name: bool = None,
@@ -53,6 +54,10 @@ class ForwardMessages:
 
             message_ids (``int`` | Iterable of ``int``):
                 An iterable of message identifiers in the chat specified in *from_chat_id* or a single message id.
+
+            message_thread_id (``int``, *optional*):
+                Unique identifier of a message thread to which the message belongs.
+                For supergroups only.
 
             disable_notification (``bool``, *optional*):
                 Sends the message silently.
@@ -98,6 +103,7 @@ class ForwardMessages:
                 drop_author=hide_sender_name,
                 drop_media_captions=hide_captions,
                 noforwards=protect_content,
+                top_msg_id=message_thread_id
             )
         )
 

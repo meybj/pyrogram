@@ -21,7 +21,7 @@ from ..object import Object
 
 
 class Username(Object):
-    """A user's or chat's username.
+    """A Telegram user's or chat's username.
 
     Parameters:
         username (``str``):
@@ -32,7 +32,7 @@ class Username(Object):
 
         active (``bool``, *optional*):
             True, if the collectible username is active.
-    
+
     """
 
     def __init__(self, *, username: str, editable: bool = None, active: bool = None):

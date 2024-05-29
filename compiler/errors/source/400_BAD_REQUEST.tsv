@@ -70,7 +70,6 @@ CHAT_ABOUT_TOO_LONG	The chat about text is too long
 CHAT_ADMIN_REQUIRED	The method requires chat admin privileges
 CHAT_DISCUSSION_UNALLOWED	The chat discussion is not allowed
 CHAT_FORWARDS_RESTRICTED	The chat restricts forwarding content
-CHAT_DISCUSSION_UNALLOWED	The chat discussion is not allowed
 CHAT_ID_EMPTY	The provided chat id is empty
 CHAT_ID_INVALID	The chat id being used is invalid or not known yet. Make sure you see the chat before interacting with it
 CHAT_INVALID	The chat is invalid
@@ -164,7 +163,6 @@ GEO_POINT_INVALID	Invalid geo point provided
 GIFT_SLUG_EXPIRED	The gift slug is expired
 GIF_CONTENT_TYPE_INVALID	GIF content-type invalid
 GIF_ID_INVALID	The provided gif/animation id is invalid
-GIFT_SLUG_EXPIRED	The gift slug is expired
 GRAPH_EXPIRED_RELOAD	This graph has expired, please obtain a new graph token
 GRAPH_INVALID_RELOAD	Invalid graph token provided, please reload the stats and provide the updated token
 GRAPH_OUTDATED_RELOAD	The graph data is outdated
@@ -461,8 +459,3 @@ WEBPUSH_AUTH_INVALID	The specified web push authentication secret is invalid
 WEBPUSH_KEY_INVALID	The specified web push elliptic curve Diffie-Hellman public key is invalid
 WEBPUSH_TOKEN_INVALID	The specified web push token is invalid
 YOU_BLOCKED_USER	You blocked this user
-TOPIC_DELETED	The specified topic was deleted
-TOPIC_CLOSED	This topic was closed, you can't send messages to it anymore
-STORIES_NEVER_CREATED	You have never created any stories
-STORIES_TOO_MUCH	Too many stories posted by the user
-GROUPCALL_FORBIDDEN	The group call has already ended.

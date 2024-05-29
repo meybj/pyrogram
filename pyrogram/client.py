@@ -44,12 +44,13 @@ from pyrogram.errors import CDNFileHashMismatch
 from pyrogram.errors import (
     SessionPasswordNeeded,
     VolumeLocNotFound, ChannelPrivate,
-    BadRequest, AuthBytesInvalid
+    BadRequest, AuthBytesInvalid,
+    FloodWait, FloodPremiumWait
 )
 from pyrogram.handlers.handler import Handler
 from pyrogram.methods import Methods
 from pyrogram.session import Auth, Session
-from pyrogram.storage import FileStorage, MemoryStorage
+from pyrogram.storage import Storage, FileStorage, MemoryStorage
 from pyrogram.types import User, TermsOfService
 from pyrogram.utils import ainput
 from .dispatcher import Dispatcher
@@ -145,11 +146,6 @@ class Client(Methods):
             Number of maximum concurrent workers for handling incoming updates.
             Defaults to ``min(32, os.cpu_count() + 4)``.
 
-        message_cache (``int``, *optional*):
-            Number of maximum incoming messages to cache.
-            Cached messages are used in answering callback queries and replying to old messages.
-            Defaults to 10000 messages.
-
         workdir (``str``, *optional*):
             Define a custom working directory.
             The working directory is the location in the filesystem where Pyrogram will store the session files.
@@ -195,6 +191,18 @@ class Client(Methods):
             A value that is too high may result in network related issues.
             Defaults to 1.
 
+        max_message_cache_size (``int``, *optional*):
+            Set the maximum size of the message cache.
+            Defaults to 10000.
+
+        storage_engine (:obj:`~pyrogram.storage.Storage`, *optional*):
+            Pass an instance of your own implementation of session storage engine.
+            Useful when you want to store your session in databases like Mongo, Redis, etc.
+
+        client_platform (:obj:`~pyrogram.enums.ClientPlatform`, *optional*):
+            The platform where this client is running.
+            Defaults to 'other'
+
         init_connection_params (:obj:`~pyrogram.raw.base.JSONValue`, *optional*):
             Additional initConnection parameters.
             For now, only the tz_offset field is supported, for specifying timezone offset in seconds.
@@ -219,6 +227,7 @@ class Client(Methods):
     UPDATES_WATCHDOG_INTERVAL = 15 * 60
 
     MAX_CONCURRENT_TRANSMISSIONS = 1
+    MAX_MESSAGE_CACHE_SIZE = 10000
 
     mimetypes = MimeTypes()
     mimetypes.readfp(StringIO(mime_types))
@@ -226,35 +235,37 @@ class Client(Methods):
     def __init__(
         self,
         name: str,
-        api_id: Union[int, str] = None,
-        api_hash: str = None,
+        api_id: Optional[Union[int, str]] = None,
+        api_hash: Optional[str] = None,
         app_version: str = APP_VERSION,
         device_model: str = DEVICE_MODEL,
         system_version: str = SYSTEM_VERSION,
         lang_pack: str = LANG_PACK,
         lang_code: str = LANG_CODE,
         system_lang_code: str = SYSTEM_LANG_CODE,
-        ipv6: bool = False,
-        proxy: dict = None,
-        test_mode: bool = False,
-        bot_token: str = None,
-        session_string: str = None,
-        in_memory: bool = None,
-        phone_number: str = None,
-        phone_code: str = None,
-        password: str = None,
+        ipv6: Optional[bool] = False,
+        proxy: Optional[dict] = None,
+        test_mode: Optional[bool] = False,
+        bot_token: Optional[str] = None,
+        session_string: Optional[str] = None,
+        in_memory: Optional[bool] = None,
+        phone_number: Optional[str] = None,
+        phone_code: Optional[str] = None,
+        password: Optional[str] = None,
         workers: int = WORKERS,
-        message_cache: int = 10000,
-        workdir: str = WORKDIR,
-        plugins: dict = None,
+        workdir: Union[str, Path] = WORKDIR,
+        plugins: Optional[dict] = None,
         parse_mode: "enums.ParseMode" = enums.ParseMode.DEFAULT,
-        no_updates: bool = None,
-        skip_updates: bool = True,
-        takeout: bool = None,
+        no_updates: Optional[bool] = None,
+        skip_updates: Optional[bool] = True,
+        takeout: Optional[bool] = None,
         sleep_threshold: int = Session.SLEEP_THRESHOLD,
-        hide_password: bool = False,
+        hide_password: Optional[bool] = False,
         max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
-        init_connection_params: "raw.base.JSONValue" = None
+        max_message_cache_size: int = MAX_MESSAGE_CACHE_SIZE,
+        storage_engine: Optional[Storage] = None,
+        client_platform: "enums.ClientPlatform" = enums.ClientPlatform.OTHER,
+        init_connection_params: Optional["raw.base.JSONValue"] = None
     ):
         super().__init__()
 
@@ -286,24 +297,35 @@ class Client(Methods):
         self.sleep_threshold = sleep_threshold
         self.hide_password = hide_password
         self.max_concurrent_transmissions = max_concurrent_transmissions
+        self.max_message_cache_size = max_message_cache_size
+        self.client_platform = client_platform
         self.init_connection_params = init_connection_params
 
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
+
+        self.storage: Storage
 
         if self.session_string:
             self.storage = MemoryStorage(self.name, self.session_string)
         elif self.in_memory:
             self.storage = MemoryStorage(self.name)
+        elif isinstance(storage_engine, Storage):
+            self.storage = storage_engine
         else:
             self.storage = FileStorage(self.name, self.workdir)
 
-        self.dispatcher = Dispatcher(self)
+        self.dispatcher: Dispatcher = Dispatcher(self)
 
         self.rnd_id = MsgId
 
-        self.parser = Parser(self)
+        self.parser: Parser = Parser(self)
 
-        self.session = None
+        self.session: Optional[Session] = None
+
+        self.business_connections = {}
+
+        self.sessions = {}
+        self.sessions_lock = asyncio.Lock()
 
         self.media_sessions = {}
         self.media_sessions_lock = asyncio.Lock()
@@ -320,7 +342,7 @@ class Client(Methods):
 
         self.me: Optional[User] = None
 
-        self.message_cache = Cache(message_cache)
+        self.message_cache = Cache(self.max_message_cache_size)
 
         # Sometimes, for some reason, the server will stop sending updates and will only respond to pings.
         # This watchdog will invoke updates.GetState in order to wake up the server and enable it sending updates again
@@ -849,7 +871,7 @@ class Client(Methods):
             if isinstance(e, asyncio.CancelledError):
                 raise e
 
-            if isinstance(e, pyrogram.errors.FloodWait):
+            if isinstance(e, (FloodWait, FloodPremiumWait)):
                 raise e
 
             return None
@@ -1083,7 +1105,7 @@ class Client(Methods):
                         await cdn_session.stop()
             except pyrogram.StopTransmission:
                 raise
-            except pyrogram.errors.FloodWait:
+            except (FloodWait, FloodPremiumWait):
                 raise
             except Exception as e:
                 log.exception(e)

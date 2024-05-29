@@ -32,6 +32,7 @@ from .unblock_user import UnblockUser
 from .update_birthday import UpdateBirthday
 from .update_personal_channel import UpdatePersonalChannel
 from .update_profile import UpdateProfile
+from .update_status import UpdateStatus
 
 
 class Users(
@@ -49,6 +50,7 @@ class Users(
     UpdateBirthday,
     UpdatePersonalChannel,
     UpdateProfile,
+    UpdateStatus,
     GetDefaultEmojiStatuses,
     SetEmojiStatus
 ):

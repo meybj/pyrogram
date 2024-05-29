@@ -40,12 +40,18 @@ class SendVoice:
         caption_entities: List["types.MessageEntity"] = None,
         duration: int = 0,
         disable_notification: bool = None,
-        reply_parameters: "types.ReplyParameters" = None,
         message_thread_id: int = None,
+        reply_to_message_id: int = None,
+        reply_to_chat_id: Union[int, str] = None,
+        reply_to_story_id: int = None,
+        quote_text: str = None,
+        quote_entities: List["types.MessageEntity"] = None,
+        quote_offset: int = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
-        ttl_seconds: int = None,
         view_once: bool = None,
+        business_connection_id: str = None,
+        ttl_seconds: int = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -89,11 +95,27 @@ class SendVoice:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_parameters (:obj:`~pyrogram.types.ReplyParameters`, *optional*):
-                Description of the message to reply to
-
             message_thread_id (``int``, *optional*):
-                If the message is in a thread, ID of the original message.
+                Unique identifier for the target message thread (topic) of the forum.
+                For supergroups only.
+
+            reply_to_message_id (``int``, *optional*):
+                If the message is a reply, ID of the original message
+
+            reply_to_chat_id (``int``, *optional*):
+                If the message is a reply, ID of the original chat.
+
+            reply_to_story_id (``int``, *optional*):
+                Unique identifier for the target story.
+
+            quote_text (``str``, *optional*):
+                Text of the quote to be sent.
+
+            quote_entities (List of :obj:`~pyrogram.types.MessageEntity`, *optional*):
+                List of special entities that appear in quote text, which can be specified instead of *parse_mode*.
+
+            quote_offset (``int``, *optional*):
+                Offset for quote in original message.
 
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
@@ -108,6 +130,9 @@ class SendVoice:
 
             view_once (``bool``, *optional*):
                 Pass True if the photo should be viewable only once.
+
+            business_connection_id (``str``, *optional*):
+                Unique identifier of the business connection on behalf of which the message will be sent.
 
             reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
                 Additional interface options. An object for an inline keyboard, custom reply keyboard,
@@ -156,6 +181,7 @@ class SendVoice:
 
         """
         file = None
+        ttl_seconds = (1 << 31) - 1 if view_once else ttl_seconds,
 
         try:
             if isinstance(voice, str):
@@ -171,19 +197,15 @@ class SendVoice:
                                 duration=duration
                             )
                         ],
-                        ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
+                        ttl_seconds=ttl_seconds
                     )
                 elif re.match("^https?://", voice):
                     media = raw.types.InputMediaDocumentExternal(
                         url=voice,
-                        ttl_seconds=ttl_seconds
+
                     )
                 else:
-                    media = utils.get_input_media_from_file_id(
-                        voice,
-                        FileType.VOICE,
-                        ttl_seconds=ttl_seconds
-                    )
+                    media = utils.get_input_media_from_file_id(voice, FileType.VOICE, ttl_seconds=ttl_seconds)
             else:
                 mime_type = utils.voiceAudioUrlFuxUps(self, voice.name, 2)
                 file = await self.save_file(voice, progress=progress, progress_args=progress_args)
@@ -196,29 +218,35 @@ class SendVoice:
                             duration=duration
                         )
                     ],
-                    ttl_seconds=0x7FFFFFFF if view_once else ttl_seconds
+                    ttl_seconds=ttl_seconds
                 )
 
-            reply_to = await utils.get_reply_head_fm(
-                self,
-                message_thread_id,
-                reply_parameters
-            )
+            quote_text, quote_entities = (await utils.parse_text_entities(self, quote_text, parse_mode, quote_entities)).values()
 
             while True:
                 try:
+                    peer = await self.resolve_peer(chat_id)
                     r = await self.invoke(
                         raw.functions.messages.SendMedia(
-                            peer=await self.resolve_peer(chat_id),
+                            peer=peer,
                             media=media,
                             silent=disable_notification or None,
-                            reply_to=reply_to,
+                            reply_to=utils.get_reply_to(
+                                reply_to_message_id=reply_to_message_id,
+                                message_thread_id=message_thread_id,
+                                reply_to_peer=await self.resolve_peer(reply_to_chat_id) if reply_to_chat_id else None,
+                                reply_to_story_id=reply_to_story_id,
+                                quote_text=quote_text,
+                                quote_entities=quote_entities,
+                                quote_offset=quote_offset,
+                            ),
                             random_id=self.rnd_id(),
                             schedule_date=utils.datetime_to_timestamp(schedule_date),
                             noforwards=protect_content,
                             reply_markup=await reply_markup.write(self) if reply_markup else None,
                             **await utils.parse_text_entities(self, caption, parse_mode, caption_entities)
-                        )
+                        ),
+                        business_connection_id=business_connection_id
                     )
                 except FilePartMissing as e:
                     await self.save_file(voice, file_id=file.id, file_part=e.value)
@@ -226,12 +254,14 @@ class SendVoice:
                     for i in r.updates:
                         if isinstance(i, (raw.types.UpdateNewMessage,
                                           raw.types.UpdateNewChannelMessage,
-                                          raw.types.UpdateNewScheduledMessage)):
+                                          raw.types.UpdateNewScheduledMessage,
+                                          raw.types.UpdateBotNewBusinessMessage)):
                             return await types.Message._parse(
                                 self, i.message,
                                 {i.id: i for i in r.users},
                                 {i.id: i for i in r.chats},
-                                is_scheduled=isinstance(i, raw.types.UpdateNewScheduledMessage)
+                                is_scheduled=isinstance(i, raw.types.UpdateNewScheduledMessage),
+                                business_connection_id=getattr(i, "connection_id", None)
                             )
         except StopTransmission:
             return None

@@ -253,9 +253,9 @@ class Chat(Object):
         business_info: "types.BusinessInfo" = None,
         business_intro: "types.BusinessIntro" = None,
         birthday: "types.Birthday" = None,
-        raw: Union["raw.base.Chat", "raw.base.User", "raw.base.ChatFull", "raw.base.UserFull"] = None,
-        has_visible_history: bool = None,
-        has_hidden_members: bool = None,
+            has_visible_history: bool = None,
+            has_hidden_members: bool = None,
+            raw: Union["raw.base.Chat", "raw.base.User", "raw.base.ChatFull", "raw.base.UserFull"] = None
     ):
         super().__init__(client)
 
@@ -306,9 +306,9 @@ class Chat(Object):
         self.business_info = business_info
         self.business_intro = business_intro
         self.birthday = birthday
-        self.raw = raw
         self.has_visible_history = has_visible_history
         self.has_hidden_members = has_hidden_members
+        self.raw = raw
 
     @staticmethod
     def _parse_user_chat(client, user: raw.types.User) -> "Chat":

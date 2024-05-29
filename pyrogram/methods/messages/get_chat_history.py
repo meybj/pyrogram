@@ -64,12 +64,7 @@ async def get_chunk(
             sleep_threshold=60
         )
 
-        return await utils.parse_messages(
-            client,
-            messages,
-            is_scheduled=False,
-            replies=0
-        )
+    return await utils.parse_messages(client, messages, is_scheduled=False, replies=0)
 
 
 class GetChatHistory:
@@ -118,8 +113,15 @@ class GetChatHistory:
             offset_date (:py:obj:`~datetime.datetime`, *optional*):
                 Pass a date as offset to retrieve only older messages starting from that date.
 
+            min_id (``int``, *optional*):
+                If a positive value was provided, the method will return only messages with IDs more than min_id.
+
+            max_id (``int``, *optional*):
+                If a positive value was provided, the method will return only messages with IDs less than max_id.
+
             is_scheduled (``bool``, *optional*):
                 Whether to get scheduled messages. Defaults to False.
+
         Returns:
             ``Generator``: A generator yielding :obj:`~pyrogram.types.Message` objects.
 
