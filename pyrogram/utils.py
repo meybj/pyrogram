@@ -45,10 +45,10 @@ async def ainput(prompt: str = "", *, hide: bool = False):
 
 
 def get_input_media_from_file_id(
-    file_id: str,
-    expected_file_type: FileType = None,
-    ttl_seconds: int = None,
-    has_spoiler: bool = None
+        file_id: str,
+        expected_file_type: FileType = None,
+        ttl_seconds: int = None,
+        has_spoiler: bool = None
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -92,10 +92,10 @@ def get_input_media_from_file_id(
 
 
 async def parse_messages(
-    client,
-    messages: "raw.types.messages.Messages",
-    replies: int = 1,
-    business_connection_id: str = None
+        client,
+        messages: "raw.types.messages.Messages",
+        replies: int = 1,
+        business_connection_id: str = None
 ) -> List["types.Message"]:
     users = {i.id: i for i in messages.users}
     chats = {i.id: i for i in messages.chats}
@@ -123,13 +123,15 @@ async def parse_messages(
         messages_with_replies = {
             i.id: i.reply_to
             for i in messages.messages
-            if not isinstance(i, raw.types.MessageEmpty) and i.reply_to and isinstance(i.reply_to, raw.types.MessageReplyHeader)
+            if not isinstance(i, raw.types.MessageEmpty) and i.reply_to and isinstance(i.reply_to,
+                                                                                       raw.types.MessageReplyHeader)
         }
 
         message_reply_to_story = {
             i.id: {'user_id': i.reply_to.user_id, 'story_id': i.reply_to.story_id}
             for i in messages.messages
-            if not isinstance(i, raw.types.MessageEmpty) and i.reply_to and isinstance(i.reply_to, raw.types.MessageReplyStoryHeader)
+            if not isinstance(i, raw.types.MessageEmpty) and i.reply_to and isinstance(i.reply_to,
+                                                                                       raw.types.MessageReplyStoryHeader)
         }
 
         if messages_with_replies:
@@ -347,13 +349,13 @@ def get_peer_type(peer_id: int) -> str:
 
 
 def get_reply_to(
-    reply_to_message_id: Optional[int] = None,
-    message_thread_id: Optional[int] = None,
-    reply_to_peer: Optional[raw.base.InputPeer] = None,
-    quote_text: Optional[str] = None,
-    quote_entities: Optional[List[raw.base.MessageEntity]] = None,
-    quote_offset: Optional[int] = None,
-    reply_to_story_id: Optional[int] = None
+        reply_to_message_id: Optional[int] = None,
+        message_thread_id: Optional[int] = None,
+        reply_to_peer: Optional[raw.base.InputPeer] = None,
+        quote_text: Optional[str] = None,
+        quote_entities: Optional[List[raw.base.MessageEntity]] = None,
+        quote_offset: Optional[int] = None,
+        reply_to_story_id: Optional[int] = None
 ) -> Optional[Union[raw.types.InputReplyToMessage, raw.types.InputReplyToStory]]:
     """Get InputReply for reply_to argument"""
     if all((reply_to_peer, reply_to_story_id)):
@@ -393,8 +395,8 @@ def xor(a: bytes, b: bytes) -> bytes:
 
 
 def compute_password_hash(
-    algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
-    password: str
+        algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
+        password: str
 ) -> bytes:
     hash1 = sha256(algo.salt1 + password.encode() + algo.salt1)
     hash2 = sha256(algo.salt2 + hash1 + algo.salt2)
@@ -405,8 +407,8 @@ def compute_password_hash(
 
 # noinspection PyPep8Naming
 def compute_password_check(
-    r: raw.types.account.Password,
-    password: str
+        r: raw.types.account.Password,
+        password: str
 ) -> raw.types.InputCheckPasswordSRP:
     algo = r.current_algo
 
@@ -465,10 +467,10 @@ def compute_password_check(
 
 
 async def parse_text_entities(
-    client: "pyrogram.Client",
-    text: str,
-    parse_mode: Optional[enums.ParseMode],
-    entities: List["types.MessageEntity"]
+        client: "pyrogram.Client",
+        text: str,
+        parse_mode: Optional[enums.ParseMode],
+        entities: List["types.MessageEntity"]
 ) -> Dict[str, Union[str, List[raw.base.MessageEntity]]]:
     if entities:
         # Inject the client instance because parsing user mentions requires it
@@ -508,3 +510,24 @@ def get_first_url(text):
     matches = re.findall(r"(https?):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])", text)
 
     return f"{matches[0][0]}://{matches[0][1]}{matches[0][2]}" if matches else None
+
+
+def fix_up_voice_audio_uri(
+        client: "pyroram.Client",
+        file_name: str,
+        dinxe: int
+) -> str:
+    un_posi_mt = [
+        "application/zip",  # 0
+        # https://t.me/c/1220993104/1360174
+        "audio/mpeg",  # 1
+        "audio/ogg",  # 2
+    ]
+    mime_type = client.guess_mime_type(file_name) or un_posi_mt[dinxe]
+    # BEWARE: https://t.me/c/1279877202/31475
+    if dinxe == 1 and mime_type == "audio/ogg":
+        mime_type = "audio/opus"
+    elif dinxe == 2 and mime_type == "audio/mpeg":
+        mime_type = "audio/ogg"
+    # BEWARE: https://t.me/c/1279877202/74
+    return mime_type
