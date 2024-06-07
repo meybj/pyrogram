@@ -210,6 +210,10 @@ class Message(Object, Update):
         giveaway (:obj:`~pyrogram.types.Giveaway`, *optional*):
             Message is a giveaway, information about the giveaway.
 
+        invoice (:obj:`~pyrogram.types.Invoice`, *optional*):
+            Message is a invoice, information about the invoice.
+            `More about payments » <https://core.telegram.org/bots/api#payments>`_
+
         story (:obj:`~pyrogram.types.Story`, *optional*):
             Message is a story, information about the story.
 
@@ -367,6 +371,9 @@ class Message(Object, Update):
         requested_chats (:obj:`~pyrogram.types.RequestedChats`, *optional*):
             Service message: requested chats information.
 
+        successful_payment (:obj:`~pyrogram.types.SuccessfulPayment`, *optional*):
+            Service message: successful payment.
+
         giveaway_launched (``bool``, *optional*):
             Service message: giveaway launched.
 
@@ -398,7 +405,7 @@ class Message(Object, Update):
             Generate a link to this message, only for groups and channels.
     """
 
-    # TODO: Add game missing field. Also invoice, successful_payment, connected_website
+    # TODO: Add game missing field. Also successful_payment, connected_website
 
     def __init__(
         self,
@@ -450,6 +457,7 @@ class Message(Object, Update):
         game: "types.Game" = None,
         giveaway: "types.Giveaway" = None,
         giveaway_result: "types.GiveawayResult" = None,
+        invoice: "types.Invoice" = None,
         story: "types.Story" = None,
         video: "types.Video" = None,
         voice: "types.Voice" = None,
@@ -494,6 +502,7 @@ class Message(Object, Update):
         web_app_data: "types.WebAppData" = None,
         gift_code: "types.GiftCode" = None,
         requested_chats: "types.RequestedChats" = None,
+        successful_payment: "types.SuccessfulPayment" = None,
         giveaway_launched: bool = None,
         chat_ttl_period: int = None,
         boosts_applied: int = None,
@@ -556,6 +565,7 @@ class Message(Object, Update):
         self.game = game
         self.giveaway = giveaway
         self.giveaway_result = giveaway_result
+        self.invoice = invoice
         self.story = story
         self.video = video
         self.voice = voice
@@ -602,6 +612,7 @@ class Message(Object, Update):
         self.web_app_data = web_app_data
         self.gift_code = gift_code
         self.requested_chats = requested_chats
+        self.successful_payment = successful_payment
         self.giveaway_launched = giveaway_launched
         self.chat_ttl_period = chat_ttl_period
         self.boosts_applied = boosts_applied
@@ -678,6 +689,7 @@ class Message(Object, Update):
             gift_code = None
             giveaway_launched = None
             requested_chats = None
+            successful_payment = None
             chat_ttl_period = None
             boosts_applied = None
             join_request_approved = None
@@ -762,6 +774,9 @@ class Message(Object, Update):
             elif isinstance(action, (raw.types.MessageActionRequestedPeer, raw.types.MessageActionRequestedPeerSentMe)):
                 requested_chats = types.RequestedChats._parse(client, action)
                 service_type = enums.MessageServiceType.REQUESTED_CHAT
+            elif isinstance(action, (raw.types.MessageActionPaymentSent, raw.types.MessageActionPaymentSentMe)):
+                successful_payment = types.SuccessfulPayment._parse(client, action)
+                service_type = enums.MessageServiceType.SUCCESSFUL_PAYMENT
             elif isinstance(action, raw.types.MessageActionSetMessagesTTL):
                 chat_ttl_period = action.period
                 service_type = enums.MessageServiceType.CHAT_TTL_CHANGED
@@ -807,6 +822,7 @@ class Message(Object, Update):
                 giveaway_launched=giveaway_launched,
                 gift_code=gift_code,
                 requested_chats=requested_chats,
+                successful_payment=successful_payment,
                 chat_ttl_period=chat_ttl_period,
                 boosts_applied=boosts_applied,
                 join_request_approved=join_request_approved,
@@ -890,6 +906,7 @@ class Message(Object, Update):
             game = None
             giveaway = None
             giveaway_result = None
+            invoice = None
             story = None
             audio = None
             voice = None
@@ -929,6 +946,9 @@ class Message(Object, Update):
                 elif isinstance(media, raw.types.MessageMediaGiveawayResults):
                     giveaway_result = await types.GiveawayResult._parse(client, media, users, chats)
                     media_type = enums.MessageMediaType.GIVEAWAY_RESULT
+                elif isinstance(media, raw.types.MessageMediaInvoice):
+                    invoice = types.Invoice._parse(client, media)
+                    media_type = enums.MessageMediaType.INVOICE
                 elif isinstance(media, raw.types.MessageMediaStory):
                     if media.story:
                         story = await types.Story._parse(client, media.story, users, chats, media.peer)
@@ -1077,6 +1097,7 @@ class Message(Object, Update):
                 game=game,
                 giveaway=giveaway,
                 giveaway_result=giveaway_result,
+                invoice=invoice,
                 story=story,
                 video=video,
                 video_note=video_note,
@@ -2359,7 +2380,6 @@ class Message(Object, Update):
         latitude: float,
         longitude: float,
         quote: bool = None,
-        horizontal_accuracy: float = None,
         disable_notification: bool = None,
         message_thread_id: int = None,
         effect_id: int = None,
@@ -2402,9 +2422,6 @@ class Message(Object, Update):
                 If ``True``, the message will be sent as a reply to this message.
                 If *reply_to_message_id* is passed, this parameter will be ignored.
                 Defaults to ``True`` in group chats and ``False`` in private chats.
-
-            horizontal_accuracy (``float``, *optional*):
-                The radius of uncertainty for the location, measured in meters; 0-1500.
 
             disable_notification (``bool``, *optional*):
                 Sends the message silently.
@@ -2456,7 +2473,6 @@ class Message(Object, Update):
             chat_id=self.chat.id,
             latitude=latitude,
             longitude=longitude,
-            horizontal_accuracy=horizontal_accuracy,
             disable_notification=disable_notification,
             message_thread_id=message_thread_id,
             effect_id=effect_id,

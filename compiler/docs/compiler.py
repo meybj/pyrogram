@@ -191,6 +191,8 @@ def pyrogram_api():
             send_dice
             search_messages
             search_messages_count
+            search_posts
+            search_posts_count
             search_global
             search_global_count
             download_media
@@ -345,6 +347,7 @@ def pyrogram_api():
             set_chat_menu_button
             get_chat_menu_button
             answer_web_app_query
+            answer_pre_checkout_query
         """,
         business="""
         Business
@@ -505,8 +508,10 @@ def pyrogram_api():
             BoostsStatus
             Giveaway
             GiveawayResult
+            Invoice
             GiftCode
             CheckedGiftCode
+            SuccessfulPayment
         """,
         bot_keyboards="""
         Bot keyboards
@@ -531,6 +536,9 @@ def pyrogram_api():
             RequestChatInfo
             RequestUserInfo
             RequestPollInfo
+            OrderInfo
+            PreCheckoutQuery
+            ShippingAddress
         """,
         bot_commands="""
         Bot commands
@@ -581,10 +589,6 @@ def pyrogram_api():
         InputMessageContent
             InputMessageContent
             InputTextMessageContent
-            InputLocationMessageContent
-            InputVenueMessageContent
-            InputContactMessageContent
-            InputInvoiceMessageContent
         """,
         authorization="""
         Authorization
@@ -704,6 +708,10 @@ def pyrogram_api():
         inline_query="""
         InlineQuery
             InlineQuery.answer
+        """,
+        pre_checkout_query="""
+        PreCheckoutQuery
+            PreCheckoutQuery.answer
         """,
         chat_join_request="""
         ChatJoinRequest
