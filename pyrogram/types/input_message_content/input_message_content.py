@@ -20,10 +20,6 @@ import pyrogram
 
 from ..object import Object
 
-"""- :obj:`~pyrogram.types.InputLocationMessageContent`
-    - :obj:`~pyrogram.types.InputVenueMessageContent`
-    - :obj:`~pyrogram.types.InputContactMessageContent`"""
-
 
 class InputMessageContent(Object):
     """Content of a message to be sent as a result of an inline query.
@@ -31,10 +27,13 @@ class InputMessageContent(Object):
     Pyrogram currently supports the following types:
 
     - :obj:`~pyrogram.types.InputTextMessageContent`
+    - :obj:`~pyrogram.types.InputLocationMessageContent`
+    - :obj:`~pyrogram.types.InputVenueMessageContent`
+    - :obj:`~pyrogram.types.InputContactMessageContent`
     """
 
     def __init__(self):
         super().__init__()
 
-    async def write(self, client: "pyrogram.Client", reply_markup):
+    async def write(self, client: "pyrogram.Client"):
         raise NotImplementedError

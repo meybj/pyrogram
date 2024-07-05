@@ -581,6 +581,10 @@ def pyrogram_api():
         InputMessageContent
             InputMessageContent
             InputTextMessageContent
+            InputLocationMessageContent
+            InputVenueMessageContent
+            InputContactMessageContent
+            InputInvoiceMessageContent
         """,
         authorization="""
         Authorization

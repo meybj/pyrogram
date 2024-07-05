@@ -16,7 +16,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import pyrogram
 from pyrogram import raw, types, utils, enums
@@ -39,6 +39,15 @@ class InputTextMessageContent(InputMessageContent):
 
         disable_web_page_preview (``bool``, *optional*):
             Disables link previews for links in this message.
+
+        show_above_text (``bool``, *optional*):
+                If True, link preview will be shown above the message text.
+                Otherwise, the link preview will be shown below the message text.
+
+        reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
+                Additional interface options. An object for an inline keyboard, custom reply keyboard,
+                instructions to remove reply keyboard or to force a reply from the user.
+
     """
 
     def __init__(
@@ -46,7 +55,14 @@ class InputTextMessageContent(InputMessageContent):
         message_text: str,
         parse_mode: Optional["enums.ParseMode"] = None,
         entities: List["types.MessageEntity"] = None,
-        disable_web_page_preview: bool = None
+        disable_web_page_preview: bool = None,
+        show_above_text: bool = False,
+        reply_markup: Union[
+            "types.InlineKeyboardMarkup",
+            "types.ReplyKeyboardMarkup",
+            "types.ReplyKeyboardRemove",
+            "types.ForceReply"
+        ] = None
     ):
         super().__init__()
 
@@ -54,15 +70,18 @@ class InputTextMessageContent(InputMessageContent):
         self.parse_mode = parse_mode
         self.entities = entities
         self.disable_web_page_preview = disable_web_page_preview
+        self.reply_markup = reply_markup
+        self.invert_media = show_above_text
 
-    async def write(self, client: "pyrogram.Client", reply_markup):
+    async def write(self, client: "pyrogram.Client"):
         message, entities = (await utils.parse_text_entities(
             client, self.message_text, self.parse_mode, self.entities
         )).values()
 
         return raw.types.InputBotInlineMessageText(
             no_webpage=self.disable_web_page_preview or None,
-            reply_markup=await reply_markup.write(client) if reply_markup else None,
+            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None,
             message=message,
-            entities=entities
+            entities=entities,
+            invert_media=self.invert_media
         )

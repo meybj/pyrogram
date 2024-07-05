@@ -2359,6 +2359,7 @@ class Message(Object, Update):
         latitude: float,
         longitude: float,
         quote: bool = None,
+        horizontal_accuracy: float = None,
         disable_notification: bool = None,
         message_thread_id: int = None,
         effect_id: int = None,
@@ -2401,6 +2402,9 @@ class Message(Object, Update):
                 If ``True``, the message will be sent as a reply to this message.
                 If *reply_to_message_id* is passed, this parameter will be ignored.
                 Defaults to ``True`` in group chats and ``False`` in private chats.
+
+            horizontal_accuracy (``float``, *optional*):
+                The radius of uncertainty for the location, measured in meters; 0-1500.
 
             disable_notification (``bool``, *optional*):
                 Sends the message silently.
@@ -2452,6 +2456,7 @@ class Message(Object, Update):
             chat_id=self.chat.id,
             latitude=latitude,
             longitude=longitude,
+            horizontal_accuracy=horizontal_accuracy,
             disable_notification=disable_notification,
             message_thread_id=message_thread_id,
             effect_id=effect_id,
