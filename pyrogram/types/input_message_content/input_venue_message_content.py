@@ -45,9 +45,6 @@ class InputVenueMessageContent(InputMessageContent):
         foursquare_type (``str``, *optional*):
             Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)
 
-        reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
-                Additional interface options. An object for an inline keyboard, custom reply keyboard,
-                instructions to remove reply keyboard or to force a reply from the user.
     """
 
     def __init__(
@@ -60,12 +57,6 @@ class InputVenueMessageContent(InputMessageContent):
             foursquare_type: Optional[str] = None,
             google_place_id: Optional[str] = None,
             google_place_type: Optional[str] = None,
-            reply_markup: Union[
-                "types.InlineKeyboardMarkup",
-                "types.ReplyKeyboardMarkup",
-                "types.ReplyKeyboardRemove",
-                "types.ForceReply"
-            ] = None
     ):
         super().__init__()
 
@@ -77,9 +68,8 @@ class InputVenueMessageContent(InputMessageContent):
         self.foursquare_type = foursquare_type
         self.google_place_id = google_place_id
         self.google_place_type = google_place_type
-        self.reply_markup = reply_markup
 
-    async def write(self, client: "pyrogram.Client"):
+    async def write(self, client: "pyrogram.Client", reply_markup):
         return raw.types.InputBotInlineMessageMediaVenue(
             geo_point=raw.types.InputGeoPoint(
                 lat=self.latitude,
@@ -90,5 +80,5 @@ class InputVenueMessageContent(InputMessageContent):
             provider="",  # TODO
             venue_id=self.foursquare_id,
             venue_type=self.foursquare_type,
-            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None
+            reply_markup=await reply_markup.write(client) if reply_markup else None
         )

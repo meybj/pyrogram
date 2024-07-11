@@ -115,12 +115,6 @@ class InputInvoiceMessageContent(InputMessageContent):
         send_phone_number_to_provider: Optional[bool] = None,
         send_email_to_provider: Optional[bool] = None,
         is_flexible: Optional[bool] = None,
-        reply_markup: Union[
-            "types.InlineKeyboardMarkup",
-            "types.ReplyKeyboardMarkup",
-            "types.ReplyKeyboardRemove",
-            "types.ForceReply"
-        ] = None
     ):
         super().__init__()
 
@@ -144,9 +138,8 @@ class InputInvoiceMessageContent(InputMessageContent):
         self.send_phone_number_to_provider = send_phone_number_to_provider
         self.send_email_to_provider = send_email_to_provider
         self.is_flexible = is_flexible
-        self.reply_markup = reply_markup
 
-    async def write(self, client: "pyrogram.Client"):
+    async def write(self, client: "pyrogram.Client", reply_markup):
         return raw.types.InputBotInlineMessageMediaInvoice(
             title=self.title,
             description=self.description,
@@ -178,5 +171,5 @@ class InputInvoiceMessageContent(InputMessageContent):
             provider_data=raw.types.DataJSON(
                 data=self.provider_data if self.provider_data else "{}"
             ),
-            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None
+            reply_markup=await reply_markup.write(client) if reply_markup else None
         )

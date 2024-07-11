@@ -57,12 +57,6 @@ class InputTextMessageContent(InputMessageContent):
         entities: List["types.MessageEntity"] = None,
         disable_web_page_preview: bool = None,
         show_above_text: bool = False,
-        reply_markup: Union[
-            "types.InlineKeyboardMarkup",
-            "types.ReplyKeyboardMarkup",
-            "types.ReplyKeyboardRemove",
-            "types.ForceReply"
-        ] = None
     ):
         super().__init__()
 
@@ -70,17 +64,16 @@ class InputTextMessageContent(InputMessageContent):
         self.parse_mode = parse_mode
         self.entities = entities
         self.disable_web_page_preview = disable_web_page_preview
-        self.reply_markup = reply_markup
         self.invert_media = show_above_text
 
-    async def write(self, client: "pyrogram.Client"):
+    async def write(self, client: "pyrogram.Client", reply_markup):
         message, entities = (await utils.parse_text_entities(
             client, self.message_text, self.parse_mode, self.entities
         )).values()
 
         return raw.types.InputBotInlineMessageText(
             no_webpage=self.disable_web_page_preview or None,
-            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None,
+            reply_markup=await reply_markup.write(client) if reply_markup else None,
             message=message,
             entities=entities,
             invert_media=self.invert_media

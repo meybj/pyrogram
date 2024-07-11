@@ -45,10 +45,6 @@ class InputLocationMessageContent(InputMessageContent):
         proximity_alert_radius (``int``, *optional*):
             For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified.
 
-        reply_markup (:obj:`~pyrogram.types.InlineKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardMarkup` | :obj:`~pyrogram.types.ReplyKeyboardRemove` | :obj:`~pyrogram.types.ForceReply`, *optional*):
-                Additional interface options. An object for an inline keyboard, custom reply keyboard,
-                instructions to remove reply keyboard or to force a reply from the user.
-
     """
 
     def __init__(
@@ -59,12 +55,6 @@ class InputLocationMessageContent(InputMessageContent):
             live_period: Optional[int] = None,
             heading: Optional[int] = None,
             proximity_alert_radius: Optional[int] = None,
-            reply_markup: Union[
-                "types.InlineKeyboardMarkup",
-                "types.ReplyKeyboardMarkup",
-                "types.ReplyKeyboardRemove",
-                "types.ForceReply"
-            ] = None
     ):
         super().__init__()
 
@@ -74,9 +64,8 @@ class InputLocationMessageContent(InputMessageContent):
         self.live_period = live_period
         self.heading = heading
         self.proximity_alert_radius = proximity_alert_radius
-        self.reply_markup = reply_markup
 
-    async def write(self, client: "pyrogram.Client"):
+    async def write(self, client: "pyrogram.Client", reply_markup):
         return raw.types.InputBotInlineMessageMediaGeo(
             geo_point=raw.types.InputGeoPoint(
                 lat=self.latitude,
@@ -86,5 +75,5 @@ class InputLocationMessageContent(InputMessageContent):
             heading=self.heading,
             period=self.live_period,
             proximity_notification_radius=self.proximity_alert_radius,
-            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None
+            reply_markup=await reply_markup.write(client) if reply_markup else None
         )

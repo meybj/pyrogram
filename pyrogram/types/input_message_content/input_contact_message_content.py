@@ -50,12 +50,6 @@ class InputContactMessageContent(InputMessageContent):
         first_name: str,
         last_name: Optional[str] = None,
         vcard: Optional[str] = None,
-        reply_markup: Union[
-            "types.InlineKeyboardMarkup",
-            "types.ReplyKeyboardMarkup",
-            "types.ReplyKeyboardRemove",
-            "types.ForceReply"
-        ] = None
     ):
         super().__init__()
 
@@ -63,13 +57,12 @@ class InputContactMessageContent(InputMessageContent):
         self.first_name = first_name
         self.last_name = last_name
         self.vcard = vcard
-        self.reply_markup = reply_markup
 
-    async def write(self, client: "pyrogram.Client"):
+    async def write(self, client: "pyrogram.Client", reply_markup):
         return raw.types.InputBotInlineMessageMediaContact(
             phone_number=self.phone_number,
             first_name=self.first_name,
             last_name=self.last_name,
             vcard=self.vcard,
-            reply_markup=await self.reply_markup.write(client) if self.reply_markup else None
+            reply_markup=await reply_markup.write(client) if reply_markup else None
         )
