@@ -981,7 +981,7 @@ def regex(pattern: Union[str, Pattern], flags: int = 0):
         elif isinstance(update, InlineQuery):
             value = update.query
         elif isinstance(update, PreCheckoutQuery):
-            value = update.payload
+            value = update.invoice_payload
         else:
             raise ValueError(f"Regex filter doesn't work with {type(update)}")
 
